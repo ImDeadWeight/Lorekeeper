@@ -35,6 +35,8 @@ interface UiState {
   focusTitlePageId: Id | null;
   peek: Peek | null;
   confirm: Confirm | null;
+  /** Folder whose pages the set-page-type dialog is open for. */
+  pageTypeFolderId: Id | null;
   errors: string[];
   selectPage(id: Id | null): void;
   toggleFolder(id: Id): void;
@@ -47,6 +49,7 @@ interface UiState {
   closePeek(): void;
   askConfirm(confirm: Confirm): void;
   closeConfirm(): void;
+  setPageTypeFolder(id: Id | null): void;
   notifyError(text: string): void;
   dismissError(index: number): void;
   /** Forgets the open page and peek, which belonged to the notebook that was open, and shows its remembered folds. */
@@ -61,6 +64,7 @@ export const useUi = create<UiState>((set) => ({
   focusTitlePageId: null,
   peek: null,
   confirm: null,
+  pageTypeFolderId: null,
   errors: [],
   selectPage: (id) => set({ selectedPageId: id, peek: null }),
   toggleFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: !s.collapsedFolders[id] } })),
@@ -72,6 +76,7 @@ export const useUi = create<UiState>((set) => ({
   closePeek: () => set({ peek: null }),
   askConfirm: (confirm) => set({ confirm }),
   closeConfirm: () => set({ confirm: null }),
+  setPageTypeFolder: (id) => set({ pageTypeFolderId: id }),
   notifyError: (text) => set((s) => ({ errors: [...s.errors, text] })),
   dismissError: (index) => set((s) => ({ errors: s.errors.filter((_, i) => i !== index) })),
   resetForNotebook: (collapsedFolders) =>

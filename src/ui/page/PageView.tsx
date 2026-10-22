@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import type { Page } from '../../domain/notebook';
 import { NEW_PAGE_TITLE, useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
+import { PageInfoBar } from './PageInfoBar';
 import { TextBoxView } from './TextBoxView';
 import './page.css';
 
@@ -77,6 +78,7 @@ export function PageView() {
     <main className="main-panel page-view">
       <div className="page-header">
         <PageTitle key={page.id} page={page} />
+        <PageInfoBar page={page} />
       </div>
       <div className="page-scroll">
         <div className="page-canvas" style={{ minWidth: width, minHeight: height }} onMouseDown={addBoxAt}>

@@ -6,6 +6,7 @@ import { ConfirmDialog } from './common/ConfirmDialog';
 import { ErrorNotices } from './common/ErrorNotices';
 import { PageView } from './page/PageView';
 import { PeekPanel } from './peek/PeekPanel';
+import { SetPageTypeDialog } from './sidebar/SetPageTypeDialog';
 import { Sidebar } from './sidebar/Sidebar';
 import { TopBar } from './TopBar';
 
@@ -19,6 +20,7 @@ export function App() {
         <PageView />
       </div>
       <PeekPanel />
+      <SetPageTypeDialog />
       <ConfirmDialog />
       <ErrorNotices />
     </div>

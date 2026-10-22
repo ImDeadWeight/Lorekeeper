@@ -71,3 +71,24 @@ describe('reading notebook files', () => {
     expect(read.folders.some((f) => f.parentId === null)).toBe(true);
   });
 });
+
+describe('reading page types', () => {
+  it('keeps valid info, drops unknown types, and repairs place parents', () => {
+    const typed = {
+      folders: [],
+      pages: [
+        { id: 'a', title: 'A', folderId: null, boxes: [], info: { type: 'place', parentPlaceId: 'b' } },
+        { id: 'b', title: 'B', folderId: null, boxes: [], info: { type: 'place', parentPlaceId: 'a' } },
+        { id: 'c', title: 'C', folderId: null, boxes: [], info: { type: 'place', parentPlaceId: 'gone' } },
+        { id: 'd', title: 'D', folderId: null, boxes: [], info: { type: 'character', kind: 'pc' } },
+        { id: 'e', title: 'E', folderId: null, boxes: [], info: { type: 'spaceship' } },
+      ],
+    };
+    const { notebook: read } = parseNotebookFile(exportText('x', typed as unknown as Notebook), 'x');
+    const info = Object.fromEntries(read.pages.map((p) => [p.id, p.info]));
+    expect([info.a, info.b].filter((i) => i?.type === 'place' && i.parentPlaceId === null)).toHaveLength(1);
+    expect(info.c).toEqual({ type: 'place', parentPlaceId: null });
+    expect(info.d).toEqual({ type: 'character', kind: 'pc' });
+    expect(info.e).toBeUndefined();
+  });
+});

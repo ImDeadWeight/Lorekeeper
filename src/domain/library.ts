@@ -3,7 +3,7 @@
  * the exported-notebook file format (writing it, and reading it back safely).
  */
 import type { Id } from './ids';
-import type { Folder, Notebook, Page, TextBox } from './notebook';
+import type { Folder, Notebook, Page, PageInfo, TextBox } from './notebook';
 
 /** A notebook's entry in the library. Its id also names the notebook's file. */
 export interface NotebookInfo {
@@ -123,11 +123,46 @@ function readNotebook(raw: unknown): Notebook {
     const title = typeof p.title === 'string' && p.title.trim() ? p.title : 'Untitled page';
     const folderId = isString(p.folderId) && folderIds.has(p.folderId) ? p.folderId : null;
     const boxes = Array.isArray(p.boxes) ? p.boxes.map((b, j) => readBox(b, `page "${title}", box ${j + 1}`)) : [];
-    return { id: p.id, title, folderId, boxes };
+    const info = readInfo(p.info);
+    return info ? { id: p.id, title, folderId, boxes, info } : { id: p.id, title, folderId, boxes };
   });
   if (new Set(pages.map((p) => p.id)).size !== pages.length) throw new Error('two pages share an id');
+  repairPlaces(pages);
 
   return { folders, pages };
+}
+
+/** A page's info, or undefined (a plain note) when it is missing or unrecognised. */
+function readInfo(raw: unknown): PageInfo | undefined {
+  if (!isObject(raw)) return undefined;
+  switch (raw.type) {
+    case 'character':
+      return { type: 'character', kind: raw.kind === 'pc' ? 'pc' : 'npc' };
+    case 'place':
+      return { type: 'place', parentPlaceId: isString(raw.parentPlaceId) ? raw.parentPlaceId : null };
+    case 'faction':
+    case 'item':
+      return { type: raw.type };
+    default:
+      return undefined;
+  }
+}
+
+/** Places inside a missing page, a non-place, or (through a loop) themselves go to the top of the place tree. */
+function repairPlaces(pages: Page[]) {
+  const places = new Map<Id, { parentPlaceId: Id | null }>();
+  for (const p of pages) if (p.info?.type === 'place') places.set(p.id, p.info);
+  for (const info of places.values()) if (info.parentPlaceId && !places.has(info.parentPlaceId)) info.parentPlaceId = null;
+  for (const [id, info] of places) {
+    const seen = new Set<Id>([id]);
+    for (let parent = info.parentPlaceId; parent; parent = places.get(parent)?.parentPlaceId ?? null) {
+      if (seen.has(parent)) {
+        info.parentPlaceId = null;
+        break;
+      }
+      seen.add(parent);
+    }
+  }
 }
 
 /** A text box, checked. `where` names it in error messages. */

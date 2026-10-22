@@ -24,12 +24,93 @@ export interface TextBox {
   content: JSONContent;
 }
 
+/** Player character or non-player character (the same split Encounters makes). */
+export type CharacterKind = 'pc' | 'npc';
+
+/**
+ * What a page describes, with the fields that kind of page needs. A page
+ * without info is a plain note. Encounters reads characters and places.
+ */
+export type PageInfo =
+  | { type: 'character'; kind: CharacterKind }
+  /** parentPlaceId: the place this one is inside (Fort Talbot inside Aurelane), or null. */
+  | { type: 'place'; parentPlaceId: Id | null }
+  | { type: 'faction' }
+  | { type: 'item' };
+
+/** Every kind of page, including the plain note. */
+export type PageType = 'note' | PageInfo['type'];
+
+/** Page types in menu order, with their labels. */
+export const PAGE_TYPES: { type: PageType; label: string }[] = [
+  { type: 'note', label: 'Note' },
+  { type: 'character', label: 'Character' },
+  { type: 'place', label: 'Place' },
+  { type: 'faction', label: 'Faction' },
+  { type: 'item', label: 'Item' },
+];
+
 /** A named note page. Its title is what other pages' text is matched against for links. */
 export interface Page {
   id: Id;
   title: string;
   folderId: Id | null;
   boxes: TextBox[];
+  /** Absent for plain notes. */
+  info?: PageInfo;
+}
+
+/** A page's type ('note' when it has none). */
+export function pageType(page: Pick<Page, 'info'>): PageType {
+  return page.info?.type ?? 'note';
+}
+
+/**
+ * Info for a page changing to `type`. Keeps the page's current fields when
+ * the type doesn't change (a place keeps its parent); otherwise starts from
+ * defaults (a character starts as an NPC). Undefined means a plain note.
+ */
+export function infoForType(type: PageType, current?: PageInfo): PageInfo | undefined {
+  if (current?.type === type) return current;
+  switch (type) {
+    case 'note':
+      return undefined;
+    case 'character':
+      return { type, kind: 'npc' };
+    case 'place':
+      return { type, parentPlaceId: null };
+    default:
+      return { type };
+  }
+}
+
+/** The place a place page sits inside, if that page still exists and is still a place. */
+export function parentPlace(pages: Page[], page: Page): Page | null {
+  if (page.info?.type !== 'place' || !page.info.parentPlaceId) return null;
+  const parent = pages.find((p) => p.id === (page.info as { parentPlaceId: Id }).parentPlaceId);
+  return parent?.info?.type === 'place' ? parent : null;
+}
+
+/** Ids of every place nested (at any depth) inside the given place, not including it. */
+export function descendantPlaceIds(pages: Page[], placeId: Id): Id[] {
+  const result: Id[] = [];
+  const queue = [placeId];
+  while (queue.length) {
+    const parent = queue.shift()!;
+    for (const p of pages) {
+      if (p.info?.type === 'place' && p.info.parentPlaceId === parent && !result.includes(p.id)) {
+        result.push(p.id);
+        queue.push(p.id);
+      }
+    }
+  }
+  return result;
+}
+
+/** Places a place could be put inside: every other place except those inside it (which would make a loop). */
+export function placeParentOptions(pages: Page[], placeId: Id): Page[] {
+  const blocked = new Set([placeId, ...descendantPlaceIds(pages, placeId)]);
+  return pages.filter((p) => p.info?.type === 'place' && !blocked.has(p.id)).sort((a, b) => byName(a.title, b.title));
 }
 
 /** Everything that is saved. */

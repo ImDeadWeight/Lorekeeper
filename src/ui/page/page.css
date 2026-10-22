@@ -25,6 +25,27 @@
   border-color: var(--border);
 }
 
+/* Page type and its fields, under the title. */
+.page-info-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 0;
+}
+
+.page-info-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.page-info-field select {
+  padding: 3px 6px;
+  color: var(--text);
+}
+
 .page-scroll {
   flex: 1;
   min-height: 0;

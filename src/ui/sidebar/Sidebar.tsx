@@ -3,9 +3,10 @@
  * drop to reorganise them.
  */
 import { DndContext, PointerSensor, TouchSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
-import { FilePlus, FileText, Folder, FolderOpen, FolderPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { FilePlus, Folder, FolderOpen, FolderPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import type { Id } from '../../domain/ids';
-import { byFolderOrder, byName, descendantFolderIds, type Folder as FolderModel, type Page } from '../../domain/notebook';
+import { byFolderOrder, byName, descendantFolderIds, pageType, type Folder as FolderModel, type Page } from '../../domain/notebook';
+import { PageTypeIcon } from '../page/pageTypes';
 import { useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
 import { accepts, collisionDetection, handleDragCancel, handleDragEnd, handleDragMove, ROOT_DROP_ID, type DragItem } from './dnd';
@@ -72,7 +73,7 @@ function PageNode({ page, depth }: { page: Page; depth: number }) {
       <TreeRow
         depth={depth}
         label={page.title}
-        icon={<FileText size={15} />}
+        icon={<PageTypeIcon type={pageType(page)} />}
         drag={{ type: 'page', id: page.id }}
         selected={selected}
         onSelect={() => useUi.getState().selectPage(page.id)}
@@ -110,6 +111,7 @@ function FolderNode({ folder, depth }: { folder: FolderModel; depth: number }) {
         onToggle={toggle}
         onAddPage={() => createPage(folder.id)}
         onAddFolder={() => createFolder(folder.id)}
+        onSetPageType={() => useUi.getState().setPageTypeFolder(folder.id)}
         onDelete={() => confirmDeleteFolder(folder)}
         onRename={(name) => useNotebook.getState().renameFolder(folder.id, name)}
       />

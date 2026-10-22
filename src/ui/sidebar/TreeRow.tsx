@@ -3,7 +3,7 @@
  * pencil or a double-click), inline action buttons, drag and drop.
  */
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { ChevronDown, ChevronRight, FilePlus, FolderPlus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FilePlus, FolderPlus, Pencil, Shapes, Trash2 } from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { accepts, useDropZone, type DragItem, type DropTarget } from './dnd';
 
@@ -41,13 +41,16 @@ interface Props {
   onSelect?: () => void;
   onAddPage?: () => void;
   onAddFolder?: () => void;
+  /** Folders: set the type of every page inside. */
+  onSetPageType?: () => void;
   onDelete: () => void;
   onRename: (name: string) => void;
 }
 
 /** One line of the sidebar tree. */
 export function TreeRow(props: Props) {
-  const { depth, label, icon, drag, drop, expanded, onToggle, selected, onSelect, onAddPage, onAddFolder, onDelete, onRename } = props;
+  const { depth, label, icon, drag, drop, expanded, onToggle, selected, onSelect, onAddPage, onAddFolder, onSetPageType, onDelete, onRename } =
+    props;
   const [editing, setEditing] = useState(false);
   const draggable = useDraggable({ id: `drag:${drag.type}:${drag.id}`, data: drag, disabled: editing });
   const dropId = `drop:${drag.id}`;
@@ -114,6 +117,11 @@ export function TreeRow(props: Props) {
         {onAddFolder && (
           <button className="icon" title="New folder here" onClick={(e) => { e.stopPropagation(); onAddFolder(); }}>
             <FolderPlus size={15} />
+          </button>
+        )}
+        {onSetPageType && (
+          <button className="icon" title="Set page type for everything inside" onClick={(e) => { e.stopPropagation(); onSetPageType(); }}>
+            <Shapes size={15} />
           </button>
         )}
         <button className="icon" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(); }}>

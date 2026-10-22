@@ -5,7 +5,32 @@
 import type { JSONContent } from '@tiptap/core';
 import { create } from 'zustand';
 import { newId, type Id } from '../domain/ids';
-import { canMoveFolder, descendantFolderIds, emptyNotebook, placeFolder, type Notebook, type TextBox } from '../domain/notebook';
+import {
+  canMoveFolder,
+  descendantFolderIds,
+  emptyNotebook,
+  placeFolder,
+  type Notebook,
+  type Page,
+  type PageInfo,
+  type TextBox,
+} from '../domain/notebook';
+
+/** A page with its info replaced (removed entirely when it becomes a plain note). */
+function withInfo(page: Page, info: PageInfo | undefined): Page {
+  const { info: _old, ...rest } = page;
+  return info ? { ...rest, info } : rest;
+}
+
+/** Places inside a page that no longer exists (or is no longer a place) move to the top of the place tree. */
+function dropDanglingParents(pages: Page[]): Page[] {
+  const places = new Set(pages.filter((p) => p.info?.type === 'place').map((p) => p.id));
+  return pages.map((p) =>
+    p.info?.type === 'place' && p.info.parentPlaceId && !places.has(p.info.parentPlaceId)
+      ? withInfo(p, { ...p.info, parentPlaceId: null })
+      : p,
+  );
+}
 
 /** Title given to new pages until the user names them. */
 export const NEW_PAGE_TITLE = 'Untitled page';
@@ -27,6 +52,8 @@ interface NotebookState extends Notebook {
   addPage(folderId: Id | null, title?: string): Id;
   renamePage(id: Id, title: string): void;
   movePage(id: Id, folderId: Id | null): void;
+  /** Sets what pages describe (undefined makes them plain notes). */
+  setPageInfo(ids: Id[], info: (current: PageInfo | undefined) => PageInfo | undefined): void;
   deletePage(id: Id): void;
   addBox(pageId: Id, x: number, y: number): Id;
   updateBox(pageId: Id, boxId: Id, patch: Partial<Omit<TextBox, 'id'>>): void;
@@ -73,7 +100,7 @@ export const useNotebook = create<NotebookState>((set, get) => {
       const doomed = new Set([id, ...descendantFolderIds(get().folders, id)]);
       set((s) => ({
         folders: s.folders.filter((f) => !doomed.has(f.id)),
-        pages: s.pages.filter((p) => !p.folderId || !doomed.has(p.folderId)),
+        pages: dropDanglingParents(s.pages.filter((p) => !p.folderId || !doomed.has(p.folderId))),
       }));
     },
 
@@ -91,8 +118,13 @@ export const useNotebook = create<NotebookState>((set, get) => {
       set((s) => ({ pages: s.pages.map((p) => (p.id === id ? { ...p, folderId } : p)) }));
     },
 
+    setPageInfo(ids, info) {
+      const chosen = new Set(ids);
+      set((s) => ({ pages: dropDanglingParents(s.pages.map((p) => (chosen.has(p.id) ? withInfo(p, info(p.info)) : p))) }));
+    },
+
     deletePage(id) {
-      set((s) => ({ pages: s.pages.filter((p) => p.id !== id) }));
+      set((s) => ({ pages: dropDanglingParents(s.pages.filter((p) => p.id !== id)) }));
     },
 
     addBox(pageId, x, y) {
