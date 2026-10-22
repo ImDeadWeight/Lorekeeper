@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { startCampaignLink } from './state/campaignLink';
 import { startPersistence } from './state/persistence';
 import { App } from './ui/App';
 import './styles/theme.css';
@@ -15,13 +16,15 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 // Render only after data is loaded so nothing can overwrite saved files with empty state.
 startPersistence()
-  .then(() =>
+  .then(() => {
     root.render(
       <React.StrictMode>
         <App />
       </React.StrictMode>,
-    ),
-  )
+    );
+    // Sharing with Encounters starts in the background; it never holds up the app.
+    startCampaignLink();
+  })
   .catch((err: Error) => {
     root.render(<p className="empty-state">Lorekeeper could not load its notebook: {err.message}</p>);
   });

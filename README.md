@@ -44,6 +44,9 @@ Saved as JSON under `%APPDATA%\com.lorekeeper.app\data\`:
 On first start, a `notebook.json` from before there were several notebooks is adopted as "My notebook" (the old file is left as a backup).
 An unreadable file is backed up as `<name>.corrupt-<time>.json` before a fresh one is started.
 
+Lorekeeper also publishes its notebook list to `%APPDATA%CampaignLinkorekeeper.json`, the folder it shares with Encounters
+(format: the [campaign-link](https://github.com/ImDeadWeight/campaign-link) package). Not available in the browser or on Android yet.
+
 Exports are single files: `{ "format": "lorekeeper-notebook", "version": 1, "name", "notebook": { folders, pages } }`.
 Imports are checked before anything is saved; references to missing folders, and folder loops, move items to the top level.
 

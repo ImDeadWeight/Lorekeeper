@@ -8,7 +8,12 @@ export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
+/** Running on a phone or tablet (Android, iOS) rather than a desktop. */
+export function isMobile(): boolean {
+  return /Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+
 /** Desktop Tauri draws its own title bar (the native one is hidden). */
 export function hasCustomTitleBar(): boolean {
-  return isTauri() && !/Android|iPhone|iPad/i.test(navigator.userAgent);
+  return isTauri() && !isMobile();
 }
