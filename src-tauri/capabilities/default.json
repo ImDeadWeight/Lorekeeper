@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read/write the app's own JSON data under AppData and the shared Campaign Link folder (%APPDATA%\\CampaignLink); custom title bar controls.",
+  "description": "Main window: read/write the app's own JSON data under AppData and the shared Campaign Link folder (%APPDATA%\\CampaignLink); open encounters:// links and receive lorekeeper:// links; custom title bar controls.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -23,6 +23,11 @@
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$DATA/CampaignLink" }, { "path": "$DATA/CampaignLink/**" }]
+    },
+    "deep-link:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "encounters://*" }]
     }
   ]
 }

@@ -24,6 +24,11 @@
     ],
     "security": { "csp": null }
   },
+  "plugins": {
+    "deep-link": {
+      "desktop": { "schemes": ["lorekeeper"] }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

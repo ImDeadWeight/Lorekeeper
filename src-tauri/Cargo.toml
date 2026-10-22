@@ -17,3 +17,9 @@ tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tauri-plugin-opener = "2"
+tauri-plugin-deep-link = "2"
+
+# Desktop only: Android and iOS keep a single copy of an app themselves.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
