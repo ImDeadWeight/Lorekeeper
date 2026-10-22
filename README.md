@@ -32,6 +32,9 @@ Lorekeeper's dev server uses port 1430 (Encounters uses 1420), so both can run a
 - **Links**: mentions of other pages' titles (whole words, any case) get a dotted underline and a link button.
   Click a link to peek at its page; Ctrl+click opens it. The peek panel can open the page or remove the link.
   Links point at the page itself, so renaming a page keeps them working; links to a deleted page show dashed.
+- **Encounters**: link the open notebook to an Encounters campaign from the notebook menu. Encounters then suggests
+  this notebook's Character pages when naming characters. `lorekeeper://page/<notebook id>/<page id>` links (Encounters'
+  Open in Lorekeeper) open the page in the running window, switching notebooks if needed.
 
 ## Data
 
