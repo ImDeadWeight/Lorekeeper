@@ -27,7 +27,7 @@ Lorekeeper's dev server uses port 1430 (Encounters uses 1420), so both can run a
   Rename a folder or page with the pencil button that appears on hover (or double-click its name); drag rows onto folders (or onto empty space for the top level) to move them.
   Drag a folder onto the top or bottom edge of another folder to place it above or below (a line shows where); folders keep the order you give them, pages stay alphabetical.
 - **Page types**: under each title, pick what the page describes: Note, Character (PC or NPC), Place (and the place it is inside), Faction or Item.
-  The sidebar shows each type's icon; a folder's shapes button sets the type of every page inside it at once. Encounters reads characters and places.
+  The sidebar shows each type's icon; a folder's shapes button sets the type of every page inside it at once.
 - **Canvas**: click empty space to write. Drag a box by its top bar, resize it from its right edge. Empty boxes vanish when you click away.
 - **Links**: mentions of other pages' titles (whole words, any case) get a dotted underline and a link button.
   Click a link to peek at its page; Ctrl+click opens it. The peek panel can open the page or remove the link.
