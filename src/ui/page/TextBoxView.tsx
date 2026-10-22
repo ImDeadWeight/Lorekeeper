@@ -11,6 +11,8 @@ import type { Id } from '../../domain/ids';
 import { isEmptyContent, type TextBox } from '../../domain/notebook';
 import { useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
+import { EncounterLink } from '../editor/encounterLink';
+import { forgetEditor, rememberEditor } from '../editor/lastEditor';
 import { LinkSuggestions, refreshLinkSuggestions } from '../editor/linkSuggestions';
 import { linkedPageId, PageLink, unlinkAt } from '../editor/pageLink';
 
@@ -51,9 +53,11 @@ export function TextBoxView({ pageId, box }: Props) {
 
   const editor = useEditor(
     {
-      extensions: [StarterKit, PageLink, LinkSuggestions.configure({ pageId })],
+      extensions: [StarterKit, PageLink, EncounterLink, LinkSuggestions.configure({ pageId })],
       content: box.content,
       onUpdate: ({ editor }) => useNotebook.getState().setBoxContent(pageId, box.id, editor.getJSON()),
+      // Remembered so page actions (Link encounter) insert where the caret was.
+      onFocus: ({ editor }) => rememberEditor(pageId, editor),
       onBlur: ({ editor }) => {
         if (isEmptyContent(editor.getJSON())) useNotebook.getState().deleteBox(pageId, box.id);
       },
@@ -71,6 +75,14 @@ export function TextBoxView({ pageId, box }: Props) {
       },
     },
     [pageId, box.id],
+  );
+
+  // An editor going away is no longer a place to insert into.
+  useEffect(
+    () => () => {
+      if (editor) forgetEditor(editor);
+    },
+    [editor],
   );
 
   // Pages were added, renamed or deleted: re-check this box for mentions.

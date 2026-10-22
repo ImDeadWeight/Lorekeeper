@@ -35,6 +35,10 @@ Lorekeeper's dev server uses port 1430 (Encounters uses 1420), so both can run a
 - **Encounters**: link the open notebook to an Encounters campaign from the notebook menu. Encounters then suggests
   this notebook's Character pages when naming characters. `lorekeeper://page/<notebook id>/<page id>` links (Encounters'
   Open in Lorekeeper) open the page in the running window, switching notebooks if needed.
+  Once linked, **Link encounter** (under the page title) picks one of the campaign's encounters and puts a chip in the
+  text where the caret was; the chip shows the encounter's current name and whether it's in combat, and opens it in
+  Encounters. A Character page lists every encounter that character is in (through characters made from the page),
+  with its combat state and how the character is doing.
 
 ## Data
 

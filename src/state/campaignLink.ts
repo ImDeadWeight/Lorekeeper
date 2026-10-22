@@ -12,6 +12,7 @@ import {
   createLinkSync,
   makeLorekeeperCatalog,
   readEncountersCatalog,
+  sameData,
   type AppIndex,
   type EncountersCatalog,
   type LinkClaim,
@@ -134,7 +135,10 @@ export async function startCampaignLink(): Promise<void> {
       const text = await sync.readPartnerCatalog(claim.linkId).catch(() => null);
       if (!text) continue;
       try {
-        catalogs[notebookId] = readEncountersCatalog(text);
+        // Keep the same object while nothing changed, so chips and panels don't redraw on every look.
+        const fresh = readEncountersCatalog(text);
+        const previous = useCampaignLink.getState().catalogs[notebookId];
+        catalogs[notebookId] = previous && sameData(previous, fresh) ? previous : fresh;
       } catch {
         // A damaged catalogue is skipped; the previous one stays until a good one arrives.
         const previous = useCampaignLink.getState().catalogs[notebookId];
@@ -184,4 +188,16 @@ export async function startCampaignLink(): Promise<void> {
   setInterval(() => {
     if (document.visibilityState === 'visible') run();
   }, POLL_MS);
+}
+
+/** The catalogue of the Encounters campaign linked to the open notebook, or null. */
+export function useOpenNotebookCatalog(): EncountersCatalog | null {
+  const activeId = useLibrary((s) => s.activeId);
+  return useCampaignLink((s) => (activeId ? s.catalogs[activeId] ?? null : null));
+}
+
+/** The open notebook's link status with Encounters (unlinked until the first sync says otherwise). */
+export function useOpenNotebookLinkStatus(): LinkResolution['status'] | 'unavailable' {
+  const activeId = useLibrary((s) => s.activeId);
+  return useCampaignLink((s) => (!s.location ? 'unavailable' : activeId ? s.status[activeId] ?? 'unlinked' : 'unlinked'));
 }

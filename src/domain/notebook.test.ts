@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   byFolderOrder,
+  isEmptyContent,
   descendantPlaceIds,
   infoForType,
   pageType,
@@ -89,5 +90,18 @@ describe('places', () => {
   it('ignores a parent that is no longer a place', () => {
     const orphan = page('Pit', { type: 'place', parentPlaceId: 'Carian' });
     expect(parentPlace([...pages, orphan], orphan)).toBeNull();
+  });
+});
+
+describe('empty boxes', () => {
+  const paragraph = (...content: object[]) => ({ type: 'doc', content: [{ type: 'paragraph', content }] });
+
+  it('treats whitespace-only text as empty', () => {
+    expect(isEmptyContent(paragraph({ type: 'text', text: '   ' }))).toBe(true);
+    expect(isEmptyContent({ type: 'doc', content: [{ type: 'paragraph' }] })).toBe(true);
+  });
+
+  it('keeps a box holding only an encounter link', () => {
+    expect(isEmptyContent(paragraph({ type: 'encounterLink', attrs: { encounterId: 'e1', name: 'Pit brawl' } }))).toBe(false);
   });
 });

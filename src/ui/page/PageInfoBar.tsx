@@ -1,7 +1,7 @@
 /**
  * @file The row under a page's title: what the page describes (note,
  * character, place…) and that type's own fields — PC/NPC for characters,
- * the place a place is inside.
+ * the place a place is inside — plus the Link encounter button.
  */
 import { useNotebook } from '../../state/notebookStore';
 import {
@@ -14,6 +14,7 @@ import {
   type Page,
   type PageType,
 } from '../../domain/notebook';
+import { LinkEncounterButton } from '../encounters/LinkEncounterDialog';
 import { PageTypeIcon } from './pageTypes';
 
 /** Type picker plus the chosen type's fields. */
@@ -60,6 +61,9 @@ export function PageInfoBar({ page }: { page: Page }) {
           </select>
         </label>
       )}
+
+      <span className="spacer" />
+      <LinkEncounterButton pageId={page.id} />
     </div>
   );
 }

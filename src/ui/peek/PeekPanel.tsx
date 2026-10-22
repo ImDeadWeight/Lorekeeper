@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 import type { TextBox } from '../../domain/notebook';
 import { useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
+import { EncounterLink } from '../editor/encounterLink';
 import { linkedPageId, PageLink } from '../editor/pageLink';
 import './peek.css';
 
@@ -20,7 +21,7 @@ const OFFSET = 14;
 
 /** One text box's content, read-only. */
 function ReadOnlyBox({ box }: { box: TextBox }) {
-  const editor = useEditor({ extensions: [StarterKit, PageLink], content: box.content, editable: false }, [box.content]);
+  const editor = useEditor({ extensions: [StarterKit, PageLink, EncounterLink], content: box.content, editable: false }, [box.content]);
   return <EditorContent editor={editor} className="peek-box" />;
 }
 

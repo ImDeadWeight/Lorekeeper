@@ -172,9 +172,12 @@ export function canMoveFolder(folders: Folder[], folderId: Id, newParentId: Id |
   return newParentId !== folderId && !descendantFolderIds(folders, folderId).includes(newParentId);
 }
 
-/** True when a box holds no text (such boxes are discarded when they lose focus). */
+/** Inline items that count as content although they hold no text (an encounter link chip). */
+const CONTENT_ATOMS = new Set(['encounterLink']);
+
+/** True when a box holds no text or chips (such boxes are discarded when they lose focus). */
 export function isEmptyContent(content: JSONContent): boolean {
-  const hasText = (node: JSONContent): boolean =>
-    (node.type === 'text' && !!node.text?.trim()) || (node.content ?? []).some(hasText);
-  return !hasText(content);
+  const hasContent = (node: JSONContent): boolean =>
+    (node.type === 'text' && !!node.text?.trim()) || CONTENT_ATOMS.has(node.type ?? '') || (node.content ?? []).some(hasContent);
+  return !hasContent(content);
 }

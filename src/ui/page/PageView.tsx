@@ -1,11 +1,13 @@
 /**
- * @file The open page: its title, and a canvas where clicking any empty spot
- * starts a new text box there (OneNote style).
+ * @file The open page: its title, type and (for characters) the encounters
+ * they're in, and a canvas where clicking any empty spot starts a new text
+ * box there (OneNote style).
  */
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import type { Page } from '../../domain/notebook';
 import { NEW_PAGE_TITLE, useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
+import { CharacterEncounters } from '../encounters/CharacterEncounters';
 import { PageInfoBar } from './PageInfoBar';
 import { TextBoxView } from './TextBoxView';
 import './page.css';
@@ -79,6 +81,7 @@ export function PageView() {
       <div className="page-header">
         <PageTitle key={page.id} page={page} />
         <PageInfoBar page={page} />
+        {page.info?.type === 'character' && <CharacterEncounters page={page} />}
       </div>
       <div className="page-scroll">
         <div className="page-canvas" style={{ minWidth: width, minHeight: height }} onMouseDown={addBoxAt}>
