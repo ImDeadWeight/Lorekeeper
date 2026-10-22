@@ -3,7 +3,7 @@
  * drops down a list to switch, rename (double-click or pencil) or delete
  * notebooks, plus new / import / export.
  */
-import { BookOpen, Check, ChevronDown, Download, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, Download, Link2, Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { Id } from '../../domain/ids';
 import type { NotebookInfo } from '../../domain/library';
@@ -17,7 +17,9 @@ import {
   renameNotebook,
   switchNotebook,
 } from '../../state/notebooks';
+import { useCampaignLink } from '../../state/campaignLink';
 import { useUi } from '../../state/uiStore';
+import { CampaignLinkSection, LinkCampaignDialog } from './CampaignLinkSection';
 import './notebooks.css';
 
 /** Asks before deleting a notebook. */
@@ -41,6 +43,7 @@ interface RowProps {
 
 /** One notebook in the list: click to open it. */
 function NotebookRow({ notebook, active, editing, setEditing, done }: RowProps) {
+  const linked = useCampaignLink((s) => s.status[notebook.id] === 'linked');
   // Finish inline renaming; blank or unchanged names are ignored.
   const commit = (value: string) => {
     setEditing(false);
@@ -76,6 +79,11 @@ function NotebookRow({ notebook, active, editing, setEditing, done }: RowProps) 
           {notebook.name}
         </span>
       )}
+      {linked && (
+        <span className="notebook-linked" title="Linked to an Encounters campaign">
+          <Link2 size={14} />
+        </span>
+      )}
       <span className="notebook-row-actions">
         <button className="icon" title="Rename" onClick={(e) => { e.stopPropagation(); setEditing(true); }}>
           <Pencil size={14} />
@@ -97,6 +105,8 @@ export function NotebookMenu() {
   const activeId = useLibrary((s) => s.activeId);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<Id | null>(null);
+  /** Notebook the link-to-Encounters picker is open for. */
+  const [linkingId, setLinkingId] = useState<Id | null>(null);
   const menu = useRef<HTMLDivElement>(null);
   const active = notebooks.find((n) => n.id === activeId);
 
@@ -141,6 +151,15 @@ export function NotebookMenu() {
               />
             ))}
           </div>
+          {activeId && (
+            <CampaignLinkSection
+              notebookId={activeId}
+              onPick={() => {
+                close();
+                setLinkingId(activeId);
+              }}
+            />
+          )}
           <div className="notebook-dropdown-actions">
             <button
               onClick={async () => {
@@ -156,6 +175,7 @@ export function NotebookMenu() {
           </div>
         </div>
       )}
+      {linkingId && <LinkCampaignDialog notebookId={linkingId} close={() => setLinkingId(null)} />}
     </div>
   );
 }

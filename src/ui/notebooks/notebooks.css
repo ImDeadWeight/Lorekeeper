@@ -102,3 +102,47 @@
 .notebook-dropdown-actions button {
   flex: 1;
 }
+
+.notebook-linked {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+/* The open notebook's link to an Encounters campaign. */
+.campaign-link-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.campaign-link-section .spacer {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.campaign-link-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Picker: search box over a scrolling list of Encounters campaigns. */
+.link-campaign-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link-campaign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.link-campaign-option {
+  justify-content: flex-start;
+  text-align: left;
+}

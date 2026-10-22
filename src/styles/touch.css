@@ -1,0 +1,46 @@
+/*
+ * @file Touch mode: the same screens adapted for fingers (Android, touch
+ * laptops without a mouse). Keyed on the input device, not the platform, so
+ * a mouse always gets the desktop look. Loaded after the component styles.
+ */
+
+/* No hover: controls that only appear on hover are always shown. */
+@media (hover: none) {
+  .tree-actions,
+  .notebook-row-actions {
+    visibility: visible;
+  }
+
+  /* Boxes need their move/delete bar to be reachable; keep it quiet until touched. */
+  .text-box-grip {
+    visibility: visible;
+    opacity: 0.6;
+  }
+
+  .text-box:focus-within .text-box-grip {
+    opacity: 1;
+  }
+}
+
+/* Fingers: tap targets of at least about 44px. */
+@media (pointer: coarse) {
+  button.icon {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  input,
+  select {
+    min-height: 40px;
+  }
+
+  .tree-row,
+  .notebook-row {
+    min-height: 44px;
+  }
+
+  .link-suggestion-button {
+    min-width: 28px;
+    min-height: 28px;
+  }
+}
