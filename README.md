@@ -18,6 +18,17 @@ npm run tauri dev  # desktop app (same one-time Rust setup as Encounters)
 
 Lorekeeper's dev server uses port 1430 (Encounters uses 1420), so both can run at once.
 
+**Android** (same one-time setup as Encounters' README describes):
+
+```sh
+npm run tauri android init     # once; generates src-tauri/gen/android (not committed)
+npm run tauri android build -- --debug --apk --target aarch64 --target x86_64   # phones + emulator
+```
+
+The APK lands in `src-tauri/gen/android/app/build/outputs/apk/universal/debug/`. On a phone the page list and the page
+take turns filling the screen, and pages read as one column. Notebooks come over with Import (an exported notebook)
+through the system file picker. Linking with Encounters isn't available on Android yet.
+
 ## Using it
 
 - **Notebooks**: the name next to "Lorekeeper" in the top bar is the open notebook; click it to switch notebooks.
