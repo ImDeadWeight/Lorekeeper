@@ -4,9 +4,9 @@
  * a mouse always gets the desktop look. Loaded after the component styles.
  */
 
-/* No hover: controls that only appear on hover are always shown. */
+/* No hover: controls that only appear on hover show for the row last tapped (tapping a row focuses it). */
 @media (hover: none) {
-  .tree-actions,
+  .tree-row:focus-within .tree-actions,
   .notebook-row-actions {
     visibility: visible;
   }

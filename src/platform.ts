@@ -17,3 +17,11 @@ export function isMobile(): boolean {
 export function hasCustomTitleBar(): boolean {
   return isTauri() && !isMobile();
 }
+
+/** Width (px) below which the app shows one panel at a time (phones); keep in step with phone.css. */
+export const PHONE_MAX_WIDTH = 700;
+
+/** The screen is phone-sized right now (one panel at a time). */
+export function isPhoneLayout(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(`(max-width: ${PHONE_MAX_WIDTH}px)`).matches;
+}

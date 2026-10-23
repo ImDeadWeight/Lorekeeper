@@ -9,6 +9,7 @@ import { GripHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Id } from '../../domain/ids';
 import { isEmptyContent, type TextBox } from '../../domain/notebook';
+import { isPhoneLayout } from '../../platform';
 import { useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
 import { EncounterLink } from '../editor/encounterLink';
@@ -100,10 +101,13 @@ export function TextBoxView({ pageId, box }: Props) {
 
   const update = (patch: Partial<TextBox>) => useNotebook.getState().updateBox(pageId, box.id, patch);
   const startMove = (e: ReactPointerEvent) => {
+    // On a phone boxes sit in a column, so dragging would only scramble their desktop positions.
+    if (isPhoneLayout()) return;
     const { x, y } = box;
     trackPointer(e, (dx, dy) => update({ x: Math.max(0, x + dx), y: Math.max(0, y + dy) }));
   };
   const startResize = (e: ReactPointerEvent) => {
+    if (isPhoneLayout()) return;
     const { width } = box;
     trackPointer(e, (dx) => update({ width: Math.max(MIN_WIDTH, width + dx) }));
   };

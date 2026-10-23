@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand';
 import type { Id } from '../domain/ids';
+import { isPhoneLayout } from '../platform';
 
 /** The small panel that shows a linked page without leaving the current one. */
 export interface Peek {
@@ -66,7 +67,8 @@ export const useUi = create<UiState>((set) => ({
   confirm: null,
   pageTypeFolderId: null,
   errors: [],
-  selectPage: (id) => set({ selectedPageId: id, peek: null }),
+  // On a phone the page replaces the page list, so opening one folds the list away.
+  selectPage: (id) => set({ selectedPageId: id, peek: null, ...(id && isPhoneLayout() ? { sidebarCollapsed: true } : {}) }),
   toggleFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: !s.collapsedFolders[id] } })),
   expandFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: false } })),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),

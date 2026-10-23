@@ -1,7 +1,9 @@
 /**
  * @file Root layout: top bar, sidebar and the open page, plus the floating
- * peek panel, confirmation dialog and error notices.
+ * peek panel, confirmation dialog and error notices. On a phone the sidebar
+ * and the page take turns filling the screen (see phone.css).
  */
+import { useUi } from '../state/uiStore';
 import { ConfirmDialog } from './common/ConfirmDialog';
 import { ErrorNotices } from './common/ErrorNotices';
 import { PageView } from './page/PageView';
@@ -9,15 +11,17 @@ import { PeekPanel } from './peek/PeekPanel';
 import { SetPageTypeDialog } from './sidebar/SetPageTypeDialog';
 import { Sidebar } from './sidebar/Sidebar';
 import { TopBar } from './TopBar';
-// After every component's styles, so touch mode can override them.
+// After every component's styles, so touch mode and the phone layout can override them.
 import '../styles/touch.css';
+import '../styles/phone.css';
 
 /** The whole app window. */
 export function App() {
+  const sidebarOpen = useUi((s) => !s.sidebarCollapsed);
   return (
     <div className="app">
       <TopBar />
-      <div className="workspace">
+      <div className={`workspace${sidebarOpen ? ' sidebar-open' : ''}`}>
         <Sidebar />
         <PageView />
       </div>
