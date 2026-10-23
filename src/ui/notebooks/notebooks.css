@@ -146,3 +146,17 @@
   justify-content: flex-start;
   text-align: left;
 }
+
+/* Android: which shared folder is in use, with Change. */
+.campaign-link-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 8px 33px;
+  font-size: 12px;
+}
+
+.campaign-link-folder .link-button {
+  padding: 2px 8px;
+  font-size: 12px;
+}

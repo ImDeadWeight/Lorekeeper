@@ -25,6 +25,7 @@
       "allow": [{ "path": "$DATA/CampaignLink" }, { "path": "$DATA/CampaignLink/**" }]
     },
     "deep-link:default",
+    "link-folder:default",
     {
       "identifier": "opener:allow-open-url",
       "allow": [{ "url": "encounters://*" }]

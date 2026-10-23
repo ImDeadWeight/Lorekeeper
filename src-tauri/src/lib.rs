@@ -1,6 +1,7 @@
 //! Native shell shared by desktop and mobile: registers the plugins (files,
-//! dialogs, opening encounters:// links, receiving lorekeeper:// links) and
-//! starts the Tauri app that hosts the web UI.
+//! dialogs, the shared folder on Android, opening encounters:// links,
+//! receiving lorekeeper:// links) and starts the Tauri app that hosts the
+//! web UI.
 
 #[cfg(desktop)]
 use tauri::Manager;
@@ -23,6 +24,7 @@ pub fn run() {
     }
     builder
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_link_folder::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())

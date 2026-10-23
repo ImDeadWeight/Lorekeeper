@@ -24,7 +24,8 @@ import { create } from 'zustand';
 import { newId, type Id } from '../domain/ids';
 import type { Page } from '../domain/notebook';
 import { loadDocument, saveDocument } from '../storage/documents';
-import { openLinkFolder } from '../storage/linkFolder';
+import { isMobile } from '../platform';
+import { chooseLinkFolder, openLinkFolder, type LinkFolder, type LinkFolderAccess } from '../storage/linkFolder';
 import { useLibrary } from './libraryStore';
 import { useNotebook } from './notebookStore';
 import { readNotebook } from './persistence';
@@ -38,10 +39,12 @@ const CLAIMS_DOC = 'campaign-link';
 
 /** Campaign Link state, for the UI. */
 interface LinkState {
-  /** Full path of the shared folder, when available. */
+  /** Where the shared folder is (full path; on Android its name), when available. */
   location: string | null;
   /** Why linking can't work here, or the last error; null when all is well. */
   problem: string | null;
+  /** Android: the user picks the shared folder (offer Choose folder… / Change). */
+  canChooseFolder: boolean;
   /** Each notebook's link to an Encounters campaign, by notebook id. */
   claims: Record<Id, LinkClaim>;
   /** Each notebook's link status, by notebook id (absent until the first sync). */
@@ -57,6 +60,7 @@ interface LinkState {
 export const useCampaignLink = create<LinkState>(() => ({
   location: null,
   problem: null,
+  canChooseFolder: false,
   claims: {},
   status: {},
   partner: null,
@@ -98,16 +102,46 @@ export async function startCampaignLink(): Promise<void> {
     if (s.claims !== before.claims) saveDocument(CLAIMS_DOC, { claims: s.claims }).catch(() => undefined);
   });
 
-  const access = await openLinkFolder();
-  if (!access.available) {
-    useCampaignLink.setState({ problem: access.reason });
+  await connect();
+}
+
+/** The sync loop over the open folder; replaced when another folder is chosen (Android). */
+let sync: LinkSync | null = null;
+
+/** Opens the shared folder and syncs with it; the first time, also starts watching for changes. */
+async function connect() {
+  let access: LinkFolderAccess;
+  try {
+    access = await openLinkFolder();
+  } catch (err) {
+    useCampaignLink.setState({ problem: `The shared folder couldn't be opened: ${(err as Error).message ?? err}` });
     return;
   }
-  useCampaignLink.setState({ location: access.folder.location });
+  if (!access.available) {
+    useCampaignLink.setState({ location: null, problem: access.reason, canChooseFolder: access.canChoose });
+    return;
+  }
+  const first = sync === null;
+  sync = syncOver(access.folder);
+  useCampaignLink.setState({ location: access.folder.location, problem: null, canChooseFolder: isMobile() });
+  if (first) await startWatching();
+  else requestSync(0);
+}
 
+/** Android: lets the user pick (or change) the shared folder, then syncs with it. */
+export async function chooseFolder(): Promise<void> {
+  try {
+    if (await chooseLinkFolder()) await connect();
+  } catch (err) {
+    useCampaignLink.setState({ problem: `Couldn't use that folder: ${(err as Error).message ?? err}` });
+  }
+}
+
+/** A sync loop over one folder. */
+function syncOver(folder: LinkFolder): LinkSync {
   /** Notebooks not open this session whose catalogue has been built from their file. */
   const builtFromFile = new Set<Id>();
-  const sync: LinkSync = createLinkSync(access.folder, {
+  return createLinkSync(folder, {
     app: 'lorekeeper',
     campaigns: () => {
       const { claims } = useCampaignLink.getState();
@@ -125,9 +159,13 @@ export async function startCampaignLink(): Promise<void> {
       return makeLorekeeperCatalog(notebookId, name, lorePages((await readNotebook(notebookId)).pages));
     },
   });
+}
 
+/** Syncs now, after local changes, when the app comes back to the front, and every few seconds while it's visible. */
+async function startWatching() {
   /** One pass, then read the catalogue of every linked campaign. */
   async function pass() {
+    if (!sync) return;
     const result = await sync.refresh();
     const catalogs: Record<Id, EncountersCatalog> = {};
     for (const [notebookId, claim] of Object.entries(useCampaignLink.getState().claims)) {
@@ -183,8 +221,11 @@ export async function startCampaignLink(): Promise<void> {
   useNotebook.subscribe((s, before) => {
     if (s.pages !== before.pages) requestSync();
   });
-  // Changes Encounters made: look when the window comes back, and every few seconds while it's visible.
+  // Changes Encounters made: look when the window (or, on Android, the app) comes back, and every few seconds while visible.
   window.addEventListener('focus', () => requestSync(0));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestSync(0);
+  });
   setInterval(() => {
     if (document.visibilityState === 'visible') run();
   }, POLL_MS);

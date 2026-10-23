@@ -27,7 +27,9 @@ npm run tauri android build -- --debug --apk --target aarch64 --target x86_64   
 
 The APK lands in `src-tauri/gen/android/app/build/outputs/apk/universal/debug/`. On a phone the page list and the page
 take turns filling the screen, and pages read as one column. Notebooks come over with Import (an exported notebook)
-through the system file picker. Linking with Encounters isn't available on Android yet.
+through the system file picker. To link with Encounters on Android, choose the shared folder (e.g.
+`Documents/CampaignLink`) from the notebook menu, and choose the same folder in Encounters; links between the apps
+(`lorekeeper://`, `encounters://`) work on Android too.
 
 ## Using it
 
@@ -63,7 +65,8 @@ On first start, a `notebook.json` from before there were several notebooks is ad
 An unreadable file is backed up as `<name>.corrupt-<time>.json` before a fresh one is started.
 
 Lorekeeper also publishes its notebook list to `%APPDATA%\CampaignLink\lorekeeper.json`, the folder it shares with Encounters
-(format: the [campaign-link](https://github.com/ImDeadWeight/campaign-link) package). Not available in the browser or on Android yet.
+(format: the [campaign-link](https://github.com/ImDeadWeight/campaign-link) package). On Android the shared folder is one the user
+picks (the package's link-folder plugin reads and writes it); in a plain browser linking isn't available.
 
 Exports are single files: `{ "format": "lorekeeper-notebook", "version": 1, "name", "notebook": { folders, pages } }`.
 Imports are checked before anything is saved; references to missing folders, and folder loops, move items to the top level.

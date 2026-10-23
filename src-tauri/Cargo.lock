@@ -2042,6 +2042,7 @@ dependencies = [
  "tauri-plugin-deep-link",
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
+ "tauri-plugin-link-folder",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
 ]
@@ -3666,6 +3667,16 @@ dependencies = [
  "thiserror 2.0.21",
  "toml 1.1.8+spec-1.1.0",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-link-folder"
+version = "0.1.0"
+source = "git+https://github.com/ImDeadWeight/campaign-link?tag=v0.3.0#bd96f1c18a75e53e689e5c3e27fa9a027b1d463f"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]

@@ -1,18 +1,21 @@
 /**
  * @file The notebook menu's Encounters section: whether the open notebook is
- * linked to an Encounters campaign, and the picker to link it.
+ * linked to an Encounters campaign, and the picker to link it. On Android,
+ * also the shared folder (Choose folder… / Change).
  */
-import { Link2, Link2Off, Swords } from 'lucide-react';
+import { FolderOpen, Link2, Link2Off, Swords } from 'lucide-react';
 import { useState } from 'react';
 import type { Id } from '../../domain/ids';
 import { byName } from '../../domain/notebook';
-import { linkNotebook, unlinkNotebook, useCampaignLink } from '../../state/campaignLink';
+import { chooseFolder, linkNotebook, unlinkNotebook, useCampaignLink } from '../../state/campaignLink';
 import { useLibrary } from '../../state/libraryStore';
 import { Modal } from '../common/Modal';
 
 /** Status line and link/unlink button for one notebook. */
 export function CampaignLinkSection({ notebookId, onPick }: { notebookId: Id; onPick: () => void }) {
   const problem = useCampaignLink((s) => (s.location ? null : s.problem));
+  const location = useCampaignLink((s) => s.location);
+  const canChooseFolder = useCampaignLink((s) => s.canChooseFolder);
   const claim = useCampaignLink((s) => s.claims[notebookId] ?? null);
   const status = useCampaignLink((s) => s.status[notebookId]);
   const campaignName = useCampaignLink((s) => s.partner?.campaigns.find((c) => c.id === claim?.partnerId)?.name);
@@ -20,11 +23,47 @@ export function CampaignLinkSection({ notebookId, onPick }: { notebookId: Id; on
   if (problem) {
     return (
       <div className="campaign-link-section">
-        <span className="muted">{problem}</span>
+        <span className="spacer muted">{problem}</span>
+        {canChooseFolder && (
+          <button onClick={() => chooseFolder()}>
+            <FolderOpen size={15} /> Choose folder…
+          </button>
+        )}
       </div>
     );
   }
 
+  return (
+    <>
+      <LinkStatus notebookId={notebookId} onPick={onPick} claim={claim} status={status} campaignName={campaignName} />
+      {canChooseFolder && location && (
+        <div className="campaign-link-folder muted">
+          <span className="spacer">
+            Shared folder: <strong>{location}</strong>
+          </span>
+          <button className="link-button" onClick={() => chooseFolder()}>
+            Change
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Linked / waiting / not linked, with the matching button. */
+function LinkStatus({
+  notebookId,
+  onPick,
+  claim,
+  status,
+  campaignName,
+}: {
+  notebookId: Id;
+  onPick: () => void;
+  claim: { partnerId: string } | null;
+  status: string | undefined;
+  campaignName: string | undefined;
+}) {
   return (
     <div className="campaign-link-section">
       <Swords size={15} className="campaign-link-icon" />

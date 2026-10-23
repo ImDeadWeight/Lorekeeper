@@ -26,7 +26,8 @@
   },
   "plugins": {
     "deep-link": {
-      "desktop": { "schemes": ["lorekeeper"] }
+      "desktop": { "schemes": ["lorekeeper"] },
+      "mobile": [{ "scheme": ["lorekeeper"], "appLink": false }]
     }
   },
   "bundle": {
