@@ -1,15 +1,18 @@
 /**
  * @file The collapsible left panel: nested folders and pages, with drag and
- * drop to reorganise them.
+ * drop to reorganise them and a search box to narrow them down.
  */
-import { DndContext, PointerSensor, TouchSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, MouseSensor, TouchSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import { FilePlus, Folder, FolderOpen, FolderPlus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { useMemo } from 'react';
 import type { Id } from '../../domain/ids';
-import { byFolderOrder, byName, descendantFolderIds, pageType, type Folder as FolderModel, type Page } from '../../domain/notebook';
+import { byFolderOrder, byName, descendantFolderIds, filterTree, pageType, type Folder as FolderModel, type Page } from '../../domain/notebook';
 import { PageTypeIcon } from '../page/pageTypes';
 import { useNotebook } from '../../state/notebookStore';
 import { useUi } from '../../state/uiStore';
 import { accepts, collisionDetection, handleDragCancel, handleDragEnd, handleDragMove, ROOT_DROP_ID, type DragItem } from './dnd';
+import { SidebarResizer, useSidebarWidth } from './SidebarResizer';
+import { SidebarSearch, TreeFilterContext, useFolderOpen, useTreeFilter } from './SidebarSearch';
 import { TreeChildren, TreeRow } from './TreeRow';
 import './sidebar.css';
 
@@ -17,14 +20,17 @@ import './sidebar.css';
 export function createPage(folderId: Id | null) {
   const id = useNotebook.getState().addPage(folderId);
   const ui = useUi.getState();
+  // The new page wouldn't match the search, so end it.
+  ui.setSidebarSearch('');
   if (folderId) ui.expandFolder(folderId);
   ui.selectPage(id);
   ui.setFocusTitle(id);
 }
 
-/** Creates a folder and opens its parent so it shows. */
+/** Creates a folder and opens its parent so it shows (ending any search, which it wouldn't match). */
 function createFolder(parentId: Id | null) {
   useNotebook.getState().addFolder(parentId);
+  useUi.getState().setSidebarSearch('');
   if (parentId) useUi.getState().expandFolder(parentId);
 }
 
@@ -55,13 +61,15 @@ function confirmDeletePage(page: Page) {
   });
 }
 
-/** Sub-folders (as arranged) then pages (alphabetical) directly inside a folder or the top level. */
+/** Sub-folders (as arranged) then pages (alphabetical) directly inside a folder or the top level (only search results while searching). */
 function useChildren(folderId: Id | null) {
   const folders = useNotebook((s) => s.folders);
   const pages = useNotebook((s) => s.pages);
+  const filter = useTreeFilter();
+  const shown = (id: Id) => !filter || filter.visible.has(id);
   return {
-    folders: folders.filter((f) => f.parentId === folderId).sort(byFolderOrder),
-    pages: pages.filter((p) => p.folderId === folderId).sort((a, b) => byName(a.title, b.title)),
+    folders: folders.filter((f) => f.parentId === folderId && shown(f.id)).sort(byFolderOrder),
+    pages: pages.filter((p) => p.folderId === folderId && shown(p.id)).sort((a, b) => byName(a.title, b.title)),
   };
 }
 
@@ -97,8 +105,7 @@ function Contents({ folderId, depth }: { folderId: Id | null; depth: number }) {
 
 /** A folder's row and, when expanded, everything inside it. */
 function FolderNode({ folder, depth }: { folder: FolderModel; depth: number }) {
-  const expanded = useUi((s) => !s.collapsedFolders[folder.id]);
-  const toggle = () => useUi.getState().toggleFolder(folder.id);
+  const { expanded, toggle } = useFolderOpen(folder.id);
   return (
     <div className="tree-node">
       <TreeRow
@@ -127,11 +134,13 @@ function FolderNode({ folder, depth }: { folder: FolderModel; depth: number }) {
 /** The scrolling tree; empty space in it is the drop target for "move to top level". */
 function TreeBody() {
   const isEmpty = useNotebook((s) => s.folders.length === 0 && s.pages.length === 0);
+  const filter = useTreeFilter();
   const root = useDroppable({ id: ROOT_DROP_ID, data: { folderId: null } });
   const isTarget = root.isOver && accepts({ folderId: null }, root.active?.data.current as DragItem);
   return (
     <div ref={root.setNodeRef} className={`panel-body tree-body${isTarget ? ' drop-target' : ''}`}>
       {isEmpty && <p className="empty-state">Use the buttons above to create a folder or page.</p>}
+      {!isEmpty && filter?.visible.size === 0 && <p className="empty-state">No pages or folders match.</p>}
       <Contents folderId={null} depth={0} />
     </div>
   );
@@ -141,9 +150,15 @@ function TreeBody() {
 export function Sidebar() {
   const collapsed = useUi((s) => s.sidebarCollapsed);
   const toggleSidebar = useUi((s) => s.toggleSidebar);
-  // Mouse drags start after 6px so clicks still work; touch drags need a 250ms hold so lists still scroll.
+  const { width, setWidth, style } = useSidebarWidth();
+  const folders = useNotebook((s) => s.folders);
+  const pages = useNotebook((s) => s.pages);
+  const search = useUi((s) => s.sidebarSearch);
+  const filter = useMemo(() => filterTree(folders, pages, search), [folders, pages, search]);
+  // Mouse drags start after 6px so clicks still work. Touch (and touchpad gestures that arrive as touch) only
+  // picks a row up after a 250ms hold, so swipes scroll the list instead of moving things.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
   );
 
@@ -158,7 +173,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="panel sidebar">
+    <aside className="panel sidebar" style={style}>
       <div className="panel-header">
         <h3>Notebook</h3>
         <span className="spacer" />
@@ -172,6 +187,7 @@ export function Sidebar() {
           <PanelLeftClose size={18} />
         </button>
       </div>
+      <SidebarSearch />
       <DndContext
         sensors={sensors}
         collisionDetection={collisionDetection}
@@ -179,8 +195,11 @@ export function Sidebar() {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <TreeBody />
+        <TreeFilterContext.Provider value={filter}>
+          <TreeBody />
+        </TreeFilterContext.Provider>
       </DndContext>
+      <SidebarResizer width={width} onChange={setWidth} />
     </aside>
   );
 }

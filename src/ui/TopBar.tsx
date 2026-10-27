@@ -1,7 +1,10 @@
 /**
- * @file The top application bar. On desktop it is also the window title bar.
+ * @file The top application bar: the notebook menu and an Import button. On
+ * desktop it is also the window title bar.
  */
+import { Upload } from 'lucide-react';
 import { hasCustomTitleBar } from '../platform';
+import { importNotebook } from '../state/notebooks';
 import { NotebookMenu } from './notebooks/NotebookMenu';
 import { WindowControls } from './WindowControls';
 
@@ -20,6 +23,9 @@ export function TopBar() {
       <span className="brand" {...drag}>Lorekeeper</span>
       <NotebookMenu />
       <span className="spacer" {...drag} />
+      <button className="top-bar-import" title="Import a notebook from a file" onClick={importNotebook}>
+        <Upload size={16} /> <span className="top-bar-label">Import</span>
+      </button>
       {customTitleBar && <WindowControls />}
     </header>
   );

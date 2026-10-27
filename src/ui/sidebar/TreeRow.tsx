@@ -6,6 +6,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { ChevronDown, ChevronRight, FilePlus, FolderPlus, Pencil, Shapes, Trash2 } from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { accepts, useDropZone, type DragItem, type DropTarget } from './dnd';
+import { Highlighted } from './SidebarSearch';
 
 /** Left padding of a top-level row (px). */
 const BASE_INDENT = 6;
@@ -102,7 +103,7 @@ export function TreeRow(props: Props) {
         />
       ) : (
         <span className="tree-label" title="Double-click to rename" onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}>
-          {label}
+          <Highlighted text={label} />
         </span>
       )}
       <span className="tree-actions">

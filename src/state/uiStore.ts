@@ -1,6 +1,6 @@
 /**
- * @file UI store: the open page, collapsed folders, the link peek panel, the
- * confirmation dialog and error notices. Only the collapsed folders are saved
+ * @file UI store: the open page, collapsed folders, the sidebar search, the
+ * link peek panel, the confirmation dialog and error notices. Only the collapsed folders are saved
  * (per notebook, by persistence.ts); the rest resets on restart.
  */
 import { create } from 'zustand';
@@ -30,6 +30,10 @@ interface UiState {
   /** Folders the user has collapsed; expanded by default. */
   collapsedFolders: Record<Id, boolean>;
   sidebarCollapsed: boolean;
+  /** The sidebar's search text; blank shows the whole tree. */
+  sidebarSearch: string;
+  /** Folders opened or closed by hand during the current search (on top of what the search opens). */
+  searchToggled: Record<Id, boolean>;
   /** Text box that should take focus once it mounts (a box just created by clicking the canvas). */
   focusBoxId: Id | null;
   /** Page whose title field should take focus (a page just created). */
@@ -44,6 +48,10 @@ interface UiState {
   /** Expands a folder (e.g. when something is created inside it). */
   expandFolder(id: Id): void;
   toggleSidebar(): void;
+  /** Changes the sidebar search, forgetting folders toggled during the last one. */
+  setSidebarSearch(text: string): void;
+  /** Opens or closes a folder for the current search only. */
+  toggleSearchFolder(id: Id): void;
   setFocusBox(id: Id | null): void;
   setFocusTitle(id: Id | null): void;
   openPeek(peek: Peek): void;
@@ -61,6 +69,8 @@ export const useUi = create<UiState>((set) => ({
   selectedPageId: null,
   collapsedFolders: {},
   sidebarCollapsed: false,
+  sidebarSearch: '',
+  searchToggled: {},
   focusBoxId: null,
   focusTitlePageId: null,
   peek: null,
@@ -72,6 +82,8 @@ export const useUi = create<UiState>((set) => ({
   toggleFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: !s.collapsedFolders[id] } })),
   expandFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: false } })),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  setSidebarSearch: (text) => set({ sidebarSearch: text, searchToggled: {} }),
+  toggleSearchFolder: (id) => set((s) => ({ searchToggled: { ...s.searchToggled, [id]: !s.searchToggled[id] } })),
   setFocusBox: (id) => set({ focusBoxId: id }),
   setFocusTitle: (id) => set({ focusTitlePageId: id }),
   openPeek: (peek) => set({ peek }),

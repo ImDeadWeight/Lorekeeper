@@ -18,13 +18,23 @@
     width: auto;
   }
 
+  /* The page list fills the screen, so there's nothing to resize. */
+  .sidebar .sidebar-resizer {
+    display: none;
+  }
+
   /* Room for the notebook's name. */
   .top-bar .brand {
     display: none;
   }
 
   .notebook-current {
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 80px);
+  }
+
+  /* Import shrinks to its icon. */
+  .top-bar .top-bar-label {
+    display: none;
   }
 
   .notebook-dropdown {

@@ -172,6 +172,49 @@ export function canMoveFolder(folders: Folder[], folderId: Id, newParentId: Id |
   return newParentId !== folderId && !descendantFolderIds(folders, folderId).includes(newParentId);
 }
 
+/** What the sidebar shows while searching. */
+export interface TreeFilter {
+  /** Folders and pages to show: matches, the folders above them, and everything inside a matching folder. */
+  visible: Set<Id>;
+  /** Folders opened because a match is inside them. */
+  opened: Set<Id>;
+}
+
+/**
+ * Narrows the sidebar tree to a search: folders and pages whose names contain
+ * the text (ignoring case), the folders above them, and everything inside a
+ * matching folder. Null when the search is blank.
+ */
+export function filterTree(folders: Folder[], pages: Page[], query: string): TreeFilter | null {
+  const q = query.trim().toLowerCase();
+  if (!q) return null;
+  const parentOf = new Map(folders.map((f) => [f.id, f.parentId]));
+  const matchingFolders = new Set(folders.filter((f) => f.name.toLowerCase().includes(q)).map((f) => f.id));
+  // The folders above an item, nearest first (bounded in case of a parent loop).
+  const above = (parentId: Id | null) => {
+    const chain: Id[] = [];
+    for (let id = parentId; id !== null && parentOf.has(id) && chain.length < folders.length; id = parentOf.get(id)!) chain.push(id);
+    return chain;
+  };
+  const visible = new Set<Id>();
+  const opened = new Set<Id>();
+  const consider = (id: Id, parentId: Id | null, name: string) => {
+    const chain = above(parentId);
+    if (name.toLowerCase().includes(q)) {
+      visible.add(id);
+      for (const f of chain) {
+        visible.add(f);
+        opened.add(f);
+      }
+    } else if (chain.some((f) => matchingFolders.has(f))) {
+      visible.add(id);
+    }
+  };
+  for (const f of folders) consider(f.id, f.parentId, f.name);
+  for (const p of pages) consider(p.id, p.folderId, p.title);
+  return { visible, opened };
+}
+
 /** Inline items that count as content although they hold no text (an encounter link chip). */
 const CONTENT_ATOMS = new Set(['encounterLink']);
 

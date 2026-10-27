@@ -35,10 +35,13 @@ through the system file picker. To link with Encounters on Android, choose the s
 
 - **Notebooks**: the name next to "Lorekeeper" in the top bar is the open notebook; click it to switch notebooks.
   Rows there can be renamed (double-click or pencil), exported, or deleted. New notebook starts an empty one;
-  Import adds an exported file as a new notebook (it never replaces one), and also accepts an old `notebook.json`.
+  Import (in the top bar, or in the notebook menu) adds an exported file as a new notebook (it never replaces one),
+  and also accepts an old `notebook.json`.
 - **Sidebar**: the header buttons create a top-level page or folder; hovering a folder shows buttons for a page or folder inside it.
   Rename a folder or page with the pencil button that appears on hover (or double-click its name); drag rows onto folders (or onto empty space for the top level) to move them.
   Drag a folder onto the top or bottom edge of another folder to place it above or below (a line shows where); folders keep the order you give them, pages stay alphabetical.
+  The search box under the header narrows the tree as you type: matching pages and folders, the folders above them (opened),
+  and everything inside a matching folder; Escape or the × clears it. Folders opened or closed while searching go back to how they were afterwards.
 - **Page types**: under each title, pick what the page describes: Note, Character (PC or NPC), Place (and the place it is inside), Faction or Item.
   The sidebar shows each type's icon; a folder's shapes button sets the type of every page inside it at once.
 - **Canvas**: click empty space to write. Drag a box by its top bar, resize it from its right edge. Empty boxes vanish when you click away.

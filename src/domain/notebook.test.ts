@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   byFolderOrder,
+  filterTree,
   isEmptyContent,
   descendantPlaceIds,
   infoForType,
@@ -103,5 +104,36 @@ describe('empty boxes', () => {
 
   it('keeps a box holding only an encounter link', () => {
     expect(isEmptyContent(paragraph({ type: 'encounterLink', attrs: { encounterId: 'e1', name: 'Pit brawl' } }))).toBe(false);
+  });
+});
+
+describe('sidebar search', () => {
+  // Places › Vaultrock holds "Old Mill"; Characters holds "Mira"; "Harbor" is at the top level.
+  const pages: Page[] = [
+    { id: 'mill', title: 'Old Mill', folderId: 'v', boxes: [] },
+    { id: 'mira', title: 'Mira', folderId: 'c', boxes: [] },
+    { id: 'harbor', title: 'Harbor', folderId: null, boxes: [] },
+  ];
+  const visible = (query: string) => [...(filterTree(folders, pages, query)?.visible ?? [])].sort();
+
+  it('is off for a blank search', () => {
+    expect(filterTree(folders, pages, '  ')).toBeNull();
+  });
+
+  it('shows a matching page with the folders above it, opened', () => {
+    const filter = filterTree(folders, pages, 'MILL')!;
+    expect([...filter.visible].sort()).toEqual(['mill', 'p', 'v']);
+    expect([...filter.opened].sort()).toEqual(['p', 'v']);
+  });
+
+  it('shows everything inside a matching folder without opening it', () => {
+    const filter = filterTree(folders, pages, 'places')!;
+    expect([...filter.visible].sort()).toEqual(['mill', 'p', 'v']);
+    expect(filter.opened.size).toBe(0);
+  });
+
+  it('matches parts of names across folders and pages', () => {
+    expect(visible('ar')).toEqual(['c', 'harbor', 'mira']);
+    expect(visible('zzz')).toEqual([]);
   });
 });
