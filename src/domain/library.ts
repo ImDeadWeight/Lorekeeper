@@ -2,6 +2,7 @@
  * @file The notebook library: which notebooks exist and which is open, plus
  * the exported-notebook file format (writing it, and reading it back safely).
  */
+import { readSharedStatBlock } from 'campaign-link';
 import type { Id } from './ids';
 import type { Folder, Notebook, Page, PageInfo, TextBox } from './notebook';
 
@@ -124,7 +125,9 @@ function readNotebook(raw: unknown): Notebook {
     const folderId = isString(p.folderId) && folderIds.has(p.folderId) ? p.folderId : null;
     const boxes = Array.isArray(p.boxes) ? p.boxes.map((b, j) => readBox(b, `page "${title}", box ${j + 1}`)) : [];
     const info = readInfo(p.info);
-    return info ? { id: p.id, title, folderId, boxes, info } : { id: p.id, title, folderId, boxes };
+    // A stat block from a newer version, or a damaged one, is left out rather than losing the notebook.
+    const statBlock = readSharedStatBlock(p.statBlock);
+    return { id: p.id, title, folderId, boxes, ...(info ? { info } : {}), ...(statBlock ? { statBlock } : {}) };
   });
   if (new Set(pages.map((p) => p.id)).size !== pages.length) throw new Error('two pages share an id');
   repairPlaces(pages);

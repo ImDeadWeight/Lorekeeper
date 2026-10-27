@@ -3,6 +3,7 @@
  * can make. Saved to notebook.json by persistence.ts.
  */
 import type { JSONContent } from '@tiptap/core';
+import type { SharedStatBlock } from 'campaign-link';
 import { create } from 'zustand';
 import { newId, type Id } from '../domain/ids';
 import {
@@ -54,6 +55,8 @@ interface NotebookState extends Notebook {
   movePage(id: Id, folderId: Id | null): void;
   /** Sets what pages describe (undefined makes them plain notes). */
   setPageInfo(ids: Id[], info: (current: PageInfo | undefined) => PageInfo | undefined): void;
+  /** Gives a page a stat block, or removes it (undefined). */
+  setPageStatBlock(id: Id, statBlock: SharedStatBlock | undefined): void;
   deletePage(id: Id): void;
   addBox(pageId: Id, x: number, y: number): Id;
   updateBox(pageId: Id, boxId: Id, patch: Partial<Omit<TextBox, 'id'>>): void;
@@ -121,6 +124,16 @@ export const useNotebook = create<NotebookState>((set, get) => {
     setPageInfo(ids, info) {
       const chosen = new Set(ids);
       set((s) => ({ pages: dropDanglingParents(s.pages.map((p) => (chosen.has(p.id) ? withInfo(p, info(p.info)) : p))) }));
+    },
+
+    setPageStatBlock(id, statBlock) {
+      set((s) => ({
+        pages: s.pages.map((p) => {
+          if (p.id !== id) return p;
+          const { statBlock: _old, ...rest } = p;
+          return statBlock ? { ...rest, statBlock } : rest;
+        }),
+      }));
     },
 
     deletePage(id) {

@@ -46,6 +46,11 @@ through the system file picker. To link with Encounters on Android, choose the s
   and everything inside a matching folder; Escape or the × clears it. Folders opened or closed while searching go back to how they were afterwards.
 - **Page types**: under each title, pick what the page describes: Note, Character (PC or NPC), Place (and the place it is inside), Faction or Item.
   The sidebar shows each type's icon; a folder's shapes button sets the type of every page inside it at once.
+- **Stat blocks**: a Character page's **Stat block** button opens a panel beside the page (it stays open from one
+  character to the next; on a phone it covers the page). Pick a game system to start one, then Edit; the views and
+  editors are the same as Encounters'. When the notebook is linked and an Encounters character made from this page
+  has a different stat block, the panel offers **Use Encounters'** (Encounters' character editor offers this page's
+  the same way). Neither app changes the other's copy.
 - **Canvas**: click empty space to write. Drag a box by its top bar, resize it from its right edge. Empty boxes vanish when you click away.
 - **Links**: mentions of other pages' titles (whole words, any case) get a dotted underline and a link button.
   Click a link to peek at its page; Ctrl+click opens it. The peek panel can open the page or remove the link.

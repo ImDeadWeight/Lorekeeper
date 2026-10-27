@@ -90,8 +90,12 @@ function setClaim(notebookId: Id, claim: LinkClaim | null) {
   });
 }
 
-/** A page as published to Encounters: only typed pages (characters, places, factions, items). */
-const toLorePage = (p: Page): LorePage | null => (p.info ? { id: p.id, title: p.title, info: p.info } : null);
+/** A page as published to Encounters: only typed pages (characters, places, factions, items), and characters' stat blocks. */
+function toLorePage(p: Page): LorePage | null {
+  if (!p.info) return null;
+  const statBlock = p.info.type === 'character' ? p.statBlock : undefined;
+  return { id: p.id, title: p.title, info: p.info, ...(statBlock ? { statBlock } : {}) };
+}
 const lorePages = (pages: Page[]) => pages.map(toLorePage).filter((p): p is LorePage => p !== null);
 
 /** Starts linking. Never throws: problems show in useCampaignLink. */

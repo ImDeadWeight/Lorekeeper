@@ -1,6 +1,7 @@
 /**
  * @file UI store: the open page, collapsed folders, the sidebar search, the
- * link peek panel, the confirmation dialog and error notices. Only the collapsed folders are saved
+ * stat block panel, the link peek panel, the confirmation dialog and error
+ * notices. Only the collapsed folders are saved
  * (per notebook, by persistence.ts); the rest resets on restart.
  */
 import { create } from 'zustand';
@@ -30,6 +31,8 @@ interface UiState {
   /** Folders the user has collapsed; expanded by default. */
   collapsedFolders: Record<Id, boolean>;
   sidebarCollapsed: boolean;
+  /** The stat block panel beside Character pages is showing. */
+  statBlockOpen: boolean;
   /** The sidebar's search text; blank shows the whole tree. */
   sidebarSearch: string;
   /** Folders opened or closed by hand during the current search (on top of what the search opens). */
@@ -48,6 +51,7 @@ interface UiState {
   /** Expands a folder (e.g. when something is created inside it). */
   expandFolder(id: Id): void;
   toggleSidebar(): void;
+  toggleStatBlock(): void;
   /** Changes the sidebar search, forgetting folders toggled during the last one. */
   setSidebarSearch(text: string): void;
   /** Opens or closes a folder for the current search only. */
@@ -69,6 +73,7 @@ export const useUi = create<UiState>((set) => ({
   selectedPageId: null,
   collapsedFolders: {},
   sidebarCollapsed: false,
+  statBlockOpen: false,
   sidebarSearch: '',
   searchToggled: {},
   focusBoxId: null,
@@ -82,6 +87,7 @@ export const useUi = create<UiState>((set) => ({
   toggleFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: !s.collapsedFolders[id] } })),
   expandFolder: (id) => set((s) => ({ collapsedFolders: { ...s.collapsedFolders, [id]: false } })),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  toggleStatBlock: () => set((s) => ({ statBlockOpen: !s.statBlockOpen })),
   setSidebarSearch: (text) => set({ sidebarSearch: text, searchToggled: {} }),
   toggleSearchFolder: (id) => set((s) => ({ searchToggled: { ...s.searchToggled, [id]: !s.searchToggled[id] } })),
   setFocusBox: (id) => set({ focusBoxId: id }),

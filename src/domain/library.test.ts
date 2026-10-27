@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { exportFileName, exportText, parseNotebookFile, uniqueName } from './library';
+import { createEmptyStatBlock } from 'campaign-link/formats/dnd5e/statBlock';
 import type { Notebook } from './notebook';
 
 const notebook: Notebook = {
@@ -90,5 +91,21 @@ describe('reading page types', () => {
     expect(info.c).toEqual({ type: 'place', parentPlaceId: null });
     expect(info.d).toEqual({ type: 'character', kind: 'pc' });
     expect(info.e).toBeUndefined();
+  });
+});
+
+describe('reading stat blocks', () => {
+  const statBlock = { formatId: 'dnd5e', statBlock: { ...createEmptyStatBlock(), armorClass: 15 } } as const;
+  const page = (extra: object) => ({ id: 'mira', title: 'Mira', folderId: null, boxes: [], info: { type: 'character', kind: 'npc' }, ...extra });
+  const read = (p: object) => parseNotebookFile(JSON.stringify({ data: { folders: [], pages: [p] } }), 'Notes').notebook.pages[0];
+
+  it('keeps a character stat block through export and import', () => {
+    const notebook: Notebook = { folders: [], pages: [page({ statBlock }) as Notebook['pages'][number]] };
+    expect(parseNotebookFile(exportText('Notes', notebook), 'x').notebook.pages[0].statBlock).toEqual(statBlock);
+  });
+
+  it('drops a damaged or unknown-system stat block but keeps the page', () => {
+    expect(read(page({ statBlock: { formatId: 'gurps', statBlock: {} } }))).not.toHaveProperty('statBlock');
+    expect(read(page({ statBlock: { formatId: 'dnd5e', statBlock: 7 } })).title).toBe('Mira');
   });
 });

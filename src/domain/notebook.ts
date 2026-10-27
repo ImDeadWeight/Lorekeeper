@@ -3,6 +3,7 @@
  * text boxes on each page, plus pure tree helpers.
  */
 import type { JSONContent } from '@tiptap/core';
+import type { SharedStatBlock } from 'campaign-link';
 import type { Id } from './ids';
 
 /** A folder in the sidebar tree. parentId null = top level. */
@@ -58,6 +59,8 @@ export interface Page {
   boxes: TextBox[];
   /** Absent for plain notes. */
   info?: PageInfo;
+  /** Character pages: the character's stat block (the same shapes as Encounters'); absent until one is added. */
+  statBlock?: SharedStatBlock;
 }
 
 /** A page's type ('note' when it has none). */

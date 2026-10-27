@@ -26,18 +26,20 @@ export function CharacterEncounters({ page }: { page: Page }) {
   }
 
   const encounters = encountersForLorePage(catalog, page.id);
+  // Characters made from this page (to report how their combatants are doing).
+  const fromThisPage = new Set(catalog.characters.filter((c) => c.lorePageId === page.id).map((c) => c.id));
   if (encounters.length === 0) {
     return (
       <div className="character-encounters">
         <span className="muted">
-          Not in any encounters in "{catalog.name}". In Encounters, pick {page.title} from the name suggestions when creating a character.
+          {fromThisPage.size > 0
+            ? `Not in any encounters in "${catalog.name}" yet.`
+            : `Not in any encounters in "${catalog.name}". In Encounters, pick ${page.title} from the name suggestions when creating a character.`}
         </span>
       </div>
     );
   }
 
-  // Combatants made from this page, to report how they're doing.
-  const fromThisPage = new Set(catalog.characters.filter((c) => c.lorePageId === page.id).map((c) => c.id));
 
   return (
     <div className="character-encounters">

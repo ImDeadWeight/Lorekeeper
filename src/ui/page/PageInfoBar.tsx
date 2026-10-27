@@ -1,7 +1,8 @@
 /**
  * @file The row under a page's title: what the page describes (note,
  * character, place…) and that type's own fields — PC/NPC for characters,
- * the place a place is inside — plus the Link encounter button.
+ * the place a place is inside — plus the Stat block (characters) and Link
+ * encounter buttons.
  */
 import { useNotebook } from '../../state/notebookStore';
 import {
@@ -16,6 +17,7 @@ import {
 } from '../../domain/notebook';
 import { LinkEncounterButton } from '../encounters/LinkEncounterDialog';
 import { PageTypeIcon } from './pageTypes';
+import { StatBlockButton } from './StatBlockPanel';
 
 /** Type picker plus the chosen type's fields. */
 export function PageInfoBar({ page }: { page: Page }) {
@@ -63,6 +65,7 @@ export function PageInfoBar({ page }: { page: Page }) {
       )}
 
       <span className="spacer" />
+      {page.info?.type === 'character' && <StatBlockButton />}
       <LinkEncounterButton pageId={page.id} />
     </div>
   );

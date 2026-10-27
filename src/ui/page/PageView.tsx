@@ -1,7 +1,7 @@
 /**
  * @file The open page: its title, type and (for characters) the encounters
- * they're in, and a canvas where clicking any empty spot starts a new text
- * box there (OneNote style).
+ * they're in and the stat block panel, and a canvas where clicking any empty
+ * spot starts a new text box there (OneNote style).
  */
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import type { Page } from '../../domain/notebook';
@@ -10,6 +10,7 @@ import { useUi } from '../../state/uiStore';
 import { CharacterEncounters } from '../encounters/CharacterEncounters';
 import { usePhoneLayout } from '../common/usePhoneLayout';
 import { PageInfoBar } from './PageInfoBar';
+import { StatBlockPanel } from './StatBlockPanel';
 import { TextBoxView } from './TextBoxView';
 import './page.css';
 
@@ -60,6 +61,7 @@ export function PageView() {
   const page = useNotebook((s) => s.pages.find((p) => p.id === selectedPageId));
   // Phones show the boxes as one column in reading order; their saved positions are left alone.
   const phone = usePhoneLayout();
+  const statBlockOpen = useUi((s) => s.statBlockOpen);
 
   if (!page) {
     return (
@@ -95,17 +97,20 @@ export function PageView() {
         <PageInfoBar page={page} />
         {page.info?.type === 'character' && <CharacterEncounters page={page} />}
       </div>
-      <div className="page-scroll">
-        <div
-          className={`page-canvas${phone ? ' flow' : ''}`}
-          style={phone ? undefined : { minWidth: width, minHeight: height }}
-          onMouseDown={addBoxAt}
-        >
-          {page.boxes.length === 0 && <p className="canvas-hint">{phone ? 'Tap here to start writing.' : 'Click anywhere to start writing.'}</p>}
-          {boxes.map((box) => (
-            <TextBoxView key={box.id} pageId={page.id} box={box} />
-          ))}
+      <div className="page-body">
+        <div className="page-scroll">
+          <div
+            className={`page-canvas${phone ? ' flow' : ''}`}
+            style={phone ? undefined : { minWidth: width, minHeight: height }}
+            onMouseDown={addBoxAt}
+          >
+            {page.boxes.length === 0 && <p className="canvas-hint">{phone ? 'Tap here to start writing.' : 'Click anywhere to start writing.'}</p>}
+            {boxes.map((box) => (
+              <TextBoxView key={box.id} pageId={page.id} box={box} />
+            ))}
+          </div>
         </div>
+        {statBlockOpen && page.info?.type === 'character' && <StatBlockPanel key={page.id} page={page} />}
       </div>
     </main>
   );

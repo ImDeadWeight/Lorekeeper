@@ -1,6 +1,6 @@
 [package]
 name = "lorekeeper"
-version = "0.1.1"
+version = "0.1.2"
 description = "Hyperlinked campaign notes for tabletop RPGs"
 edition = "2021"
 
