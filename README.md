@@ -1,3 +1,5 @@
+<img src="app-icon.svg" alt="Lorekeeper icon" width="96">
+
 # Lorekeeper
 
 Hyperlinked campaign notes for tabletop RPGs, a companion to Encounters.
