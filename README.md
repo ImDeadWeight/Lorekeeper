@@ -3,7 +3,7 @@
 # Lorekeeper
 
 Hyperlinked campaign notes for tabletop RPGs, a companion to Encounters.
-Pages sit in nested folders; each page is a free canvas where clicking anywhere starts a text box.
+Pages sit in nested folders, and a page can hold pages of its own (Vaultrock holding The Mines); each page is a free canvas where clicking anywhere starts a text box.
 When text mentions another page's title, Lorekeeper underlines it and offers a small link button;
 clicking a link opens that page in a peek panel without leaving the current one.
 
@@ -39,13 +39,22 @@ through the system file picker. To link with Encounters on Android, choose the s
   Rows there can be renamed (double-click or pencil), exported, or deleted. New notebook starts an empty one;
   Import (in the top bar, or in the notebook menu) adds an exported file as a new notebook (it never replaces one),
   and also accepts an old `notebook.json`.
-- **Sidebar**: the header buttons create a top-level page or folder; hovering a folder shows buttons for a page or folder inside it.
-  Rename a folder or page with the pencil button that appears on hover (or double-click its name); drag rows onto folders (or onto empty space for the top level) to move them.
+- **Sidebar**: the header buttons create a top-level page or folder; hovering a folder shows buttons for a page or folder inside it,
+  and hovering a page shows a button for a page under it. A page with pages under it opens and closes like a folder (its
+  chevron); clicking its name opens the page itself. Deleting a page deletes the pages under it too.
+  Rename a folder or page with the pencil button that appears on hover (or double-click its name); drag rows onto folders (or onto empty space for the top level) to move them,
+  and drag a page onto another page to put it under that page.
   Drag a folder onto the top or bottom edge of another folder to place it above or below (a line shows where); folders keep the order you give them, pages stay alphabetical.
   The search box under the header narrows the tree as you type: matching pages and folders, the folders above them (opened),
   and everything inside a matching folder; Escape or the × clears it. Folders opened or closed while searching go back to how they were afterwards.
-- **Page types**: under each title, pick what the page describes: Note, Character (PC or NPC), Place (and the place it is inside), Faction or Item.
+- **Page types**: under each title, pick what the page describes: Note, Character (PC or NPC, and the places and factions
+  it belongs to), Place (and the place it is inside), Faction or Item. Place and Faction pages list the characters that
+  belong to them (click a name to peek, Ctrl+click to open), so characters don't need filing under each place.
   The sidebar shows each type's icon; a folder's shapes button sets the type of every page inside it at once.
+- **Older notebooks**: notebooks from before pages could hold pages are upgraded when first opened or imported. A folder
+  holding a page of the same name (a "Vaultrock" folder with a "Vaultrock" page) becomes that page, with the folder's
+  other pages under it; characters in a folder named after a place or faction belong to it. The file as it was is kept
+  beside it as `notebook-<id>.before-format-2-<time>.json`.
 - **Stat blocks**: a Character page's **Stat block** button opens a panel beside the page (it stays open from one
   character to the next; on a phone it covers the page). Pick a game system to start one, then Edit; the views and
   editors are the same as Encounters'. When the notebook is linked and an Encounters character made from this page

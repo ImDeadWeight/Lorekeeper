@@ -4,7 +4,8 @@
  */
 import { readSharedStatBlock } from 'campaign-link';
 import type { Id } from './ids';
-import type { Folder, Notebook, Page, PageInfo, TextBox } from './notebook';
+import { isGroup, type Folder, type Notebook, type Page, type PageInfo, type TextBox } from './notebook';
+import { upgradeNotebook } from './upgrade';
 
 /** A notebook's entry in the library. Its id also names the notebook's file. */
 export interface NotebookInfo {
@@ -91,16 +92,17 @@ export function parseNotebookFile(text: string, fallbackName: string): ImportedN
       throw new Error(`it was exported by a newer version of Lorekeeper (format ${parsed.version})`);
     }
     const name = isString(parsed.name) && parsed.name.trim() ? parsed.name.trim() : fallbackName;
-    return { name, notebook: readNotebook(parsed.notebook) };
+    return { name, notebook: upgradeNotebook(readNotebook(parsed.notebook)) };
   }
   // A saved notebook file: { version, data: { folders, pages } }.
-  if (isObject(parsed.data)) return { name: fallbackName, notebook: readNotebook(parsed.data) };
+  if (isObject(parsed.data)) return { name: fallbackName, notebook: upgradeNotebook(readNotebook(parsed.data)) };
   throw new Error('the file is not a Lorekeeper notebook');
 }
 
 /**
  * Checks a notebook's shape and repairs what can be repaired: references to
- * missing folders, and folder loops, move things to the top level. Entries
+ * missing folders or pages, and folder or page loops, move things to the top
+ * level; characters stop belonging to pages that aren't places or factions. Entries
  * that can't be used (no id) are an error rather than silently dropped.
  */
 function readNotebook(raw: unknown): Notebook {
@@ -127,20 +129,26 @@ function readNotebook(raw: unknown): Notebook {
     const info = readInfo(p.info);
     // A stat block from a newer version, or a damaged one, is left out rather than losing the notebook.
     const statBlock = readSharedStatBlock(p.statBlock);
-    return { id: p.id, title, folderId, boxes, ...(info ? { info } : {}), ...(statBlock ? { statBlock } : {}) };
+    const page: Page = { id: p.id, title, folderId, boxes, ...(info ? { info } : {}), ...(statBlock ? { statBlock } : {}) };
+    if (isString(p.parentPageId)) page.parentPageId = p.parentPageId;
+    return page;
   });
   if (new Set(pages.map((p) => p.id)).size !== pages.length) throw new Error('two pages share an id');
   repairPlaces(pages);
+  repairPageTree(pages);
+  repairBelongsTo(pages);
 
-  return { folders, pages };
+  return { ...(isNumber(raw.format) ? { format: raw.format } : {}), folders, pages };
 }
 
 /** A page's info, or undefined (a plain note) when it is missing or unrecognised. */
 function readInfo(raw: unknown): PageInfo | undefined {
   if (!isObject(raw)) return undefined;
   switch (raw.type) {
-    case 'character':
-      return { type: 'character', kind: raw.kind === 'pc' ? 'pc' : 'npc' };
+    case 'character': {
+      const belongsTo = Array.isArray(raw.belongsTo) ? raw.belongsTo.filter(isString) : [];
+      return { type: 'character', kind: raw.kind === 'pc' ? 'pc' : 'npc', ...(belongsTo.length ? { belongsTo } : {}) };
+    }
     case 'place':
       return { type: 'place', parentPlaceId: isString(raw.parentPlaceId) ? raw.parentPlaceId : null };
     case 'faction':
@@ -165,6 +173,34 @@ function repairPlaces(pages: Page[]) {
       }
       seen.add(parent);
     }
+  }
+}
+
+/** Pages under a missing page, or (through a loop) under themselves, go to the top level; pages under a page are in no folder. */
+function repairPageTree(pages: Page[]) {
+  const byId = new Map(pages.map((p) => [p.id, p]));
+  for (const p of pages) if (p.parentPageId && !byId.has(p.parentPageId)) delete p.parentPageId;
+  for (const page of pages) {
+    const seen = new Set<Id>([page.id]);
+    for (let parent = page.parentPageId; parent; parent = byId.get(parent)?.parentPageId) {
+      if (seen.has(parent)) {
+        delete page.parentPageId;
+        break;
+      }
+      seen.add(parent);
+    }
+    if (page.parentPageId) page.folderId = null;
+  }
+}
+
+/** Characters belong only to pages that exist and are places or factions. */
+function repairBelongsTo(pages: Page[]) {
+  const groups = new Set(pages.filter(isGroup).map((p) => p.id));
+  for (const p of pages) {
+    if (p.info?.type !== 'character' || !p.info.belongsTo) continue;
+    const belongsTo = [...new Set(p.info.belongsTo.filter((id) => groups.has(id)))];
+    if (belongsTo.length) p.info.belongsTo = belongsTo;
+    else delete p.info.belongsTo;
   }
 }
 

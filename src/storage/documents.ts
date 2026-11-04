@@ -42,12 +42,18 @@ export async function loadDocument<T>(name: string, fallback: () => T): Promise<
     if (parsed.version > SCHEMA_VERSION) throw new Error(`saved by a newer version (${parsed.version})`);
     return { data: { ...fallback(), ...parsed.data } };
   } catch (err) {
-    await store.backup(name, text);
+    await store.backup(name, text, 'corrupt');
     return {
       data: fallback(),
       warning: `${name}.json could not be read (${(err as Error).message}). A backup copy was saved and a fresh file started.`,
     };
   }
+}
+
+/** Keeps a copy of a saved document as it is now (e.g. before upgrading it); `label` goes in the copy's name. */
+export async function backupDocument(name: string, label: string): Promise<void> {
+  const text = await store.read(name);
+  if (text !== null) await store.backup(name, text, label);
 }
 
 /** True when the document has been saved before. */

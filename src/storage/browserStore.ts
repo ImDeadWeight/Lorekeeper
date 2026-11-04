@@ -15,8 +15,8 @@ export const browserStore: DocumentStore = {
   async write(name, text) {
     localStorage.setItem(key(name), text);
   },
-  async backup(name, text) {
-    localStorage.setItem(`${key(name)}.corrupt-${Date.now()}`, text);
+  async backup(name, text, label) {
+    localStorage.setItem(`${key(name)}.${label}-${Date.now()}`, text);
   },
   async remove(name) {
     localStorage.removeItem(key(name));

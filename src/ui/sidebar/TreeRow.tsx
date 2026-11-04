@@ -34,7 +34,7 @@ interface Props {
   label: string;
   icon: ReactNode;
   drag: DragItem;
-  /** Folders accept drops; pages don't. */
+  /** Folders accept pages and folders; pages accept pages. */
   drop?: DropTarget;
   expanded?: boolean;
   onToggle?: () => void;
@@ -111,7 +111,7 @@ export function TreeRow(props: Props) {
           <Pencil size={15} />
         </button>
         {onAddPage && (
-          <button className="icon" title="New page here" onClick={(e) => { e.stopPropagation(); onAddPage(); }}>
+          <button className="icon" title="New page inside" onClick={(e) => { e.stopPropagation(); onAddPage(); }}>
             <FilePlus size={15} />
           </button>
         )}

@@ -6,8 +6,9 @@
  */
 import { newId, type Id } from '../domain/ids';
 import { DEFAULT_NOTEBOOK_NAME, emptyLibrary, type Library } from '../domain/library';
-import { emptyNotebook, type Notebook } from '../domain/notebook';
-import { hasDocument, loadDocument, removeDocument, saveDocument } from '../storage/documents';
+import { emptyNotebook, newNotebook, NOTEBOOK_FORMAT, type Notebook } from '../domain/notebook';
+import { upgradeNotebook } from '../domain/upgrade';
+import { backupDocument, hasDocument, loadDocument, removeDocument, saveDocument } from '../storage/documents';
 import { useLibrary } from './libraryStore';
 import { useNotebook } from './notebookStore';
 import { useUi } from './uiStore';
@@ -23,6 +24,7 @@ const VIEW = 'view';
 
 /** How a notebook was last shown in the sidebar. */
 interface NotebookView {
+  /** Collapsed folders, and collapsed pages that have pages under them. */
   collapsedFolders: Id[];
 }
 
@@ -56,16 +58,31 @@ export function writeNotebook(id: Id, notebook: Notebook): Promise<void> {
   return serially(() => saveDocument(notebookDoc(id), notebook));
 }
 
+/** The open notebook's contents, as saved and exported. */
+export function openNotebookContents(): Notebook {
+  const { folders, pages } = useNotebook.getState();
+  return { format: NOTEBOOK_FORMAT, folders, pages };
+}
+
 /** Deletes a notebook's file. */
 export function deleteNotebookFile(id: Id): Promise<void> {
   return serially(() => removeDocument(notebookDoc(id)));
 }
 
-/** Reads a notebook's contents from its file (empty if it has none). */
+/**
+ * Reads a notebook's contents from its file (empty if it has none). One
+ * saved by an older version is upgraded, and saved upgraded after the old
+ * file is backed up.
+ */
 export async function readNotebook(id: Id): Promise<Notebook> {
   const loaded = await loadDocument(notebookDoc(id), emptyNotebook);
   if (loaded.warning) useUi.getState().notifyError(loaded.warning);
-  return loaded.data;
+  const notebook = upgradeNotebook(loaded.data);
+  if (notebook !== loaded.data && !loaded.warning) {
+    await serially(() => backupDocument(notebookDoc(id), `before-format-${NOTEBOOK_FORMAT}`));
+    await writeNotebook(id, notebook);
+  }
+  return notebook;
 }
 
 /** Saves the open notebook now (cancelling the pending save). Rejects if the write fails. */
@@ -73,8 +90,7 @@ export function saveOpenNotebook(): Promise<void> {
   clearTimeout(timer);
   timer = undefined;
   if (!openId) return Promise.resolve();
-  const { folders, pages } = useNotebook.getState();
-  return writeNotebook(openId, { folders, pages });
+  return writeNotebook(openId, openNotebookContents());
 }
 
 /**
@@ -103,10 +119,11 @@ function saveViews(): Promise<void> {
   return serially(() => saveDocument(VIEW, views));
 }
 
-/** Records the open notebook's collapsed folders (ignoring deleted ones) and saves them shortly. */
+/** Records the open notebook's collapsed folders and pages (ignoring deleted ones) and saves them shortly. */
 function rememberView(collapsedFolders: Record<Id, boolean>) {
   if (!openId) return;
-  const existing = new Set(useNotebook.getState().folders.map((f) => f.id));
+  const { folders, pages } = useNotebook.getState();
+  const existing = new Set([...folders.map((f) => f.id), ...pages.map((p) => p.id)]);
   const collapsed = Object.keys(collapsedFolders).filter((id) => collapsedFolders[id] && existing.has(id));
   views = { ...views, [openId]: { collapsedFolders: collapsed } };
   clearTimeout(viewTimer);
@@ -128,7 +145,7 @@ async function firstLibrary(): Promise<Library> {
   const id = newId();
   const legacy = (await hasDocument(LEGACY_NOTEBOOK)) ? await loadDocument(LEGACY_NOTEBOOK, emptyNotebook) : null;
   if (legacy?.warning) useUi.getState().notifyError(legacy.warning);
-  await writeNotebook(id, legacy?.data ?? emptyNotebook());
+  await writeNotebook(id, legacy?.data ?? newNotebook());
   return { notebooks: [{ id, name: DEFAULT_NOTEBOOK_NAME }], activeId: id };
 }
 

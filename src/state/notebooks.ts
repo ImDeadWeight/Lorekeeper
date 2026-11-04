@@ -4,11 +4,10 @@
  */
 import { newId, type Id } from '../domain/ids';
 import { exportFileName, exportText, NEW_NOTEBOOK_NAME, parseNotebookFile, uniqueName } from '../domain/library';
-import { emptyNotebook, type Notebook } from '../domain/notebook';
+import { newNotebook, type Notebook } from '../domain/notebook';
 import { openFile, saveFileAs } from '../storage/files';
 import { useLibrary } from './libraryStore';
-import { useNotebook } from './notebookStore';
-import { deleteNotebookFile, forgetView, openNotebook, readNotebook, writeNotebook } from './persistence';
+import { deleteNotebookFile, forgetView, openNotebook, openNotebookContents, readNotebook, writeNotebook } from './persistence';
 import { useUi } from './uiStore';
 
 const notify = (what: string, err: unknown) => useUi.getState().notifyError(`${what}: ${(err as Error).message}`);
@@ -37,7 +36,7 @@ export async function switchNotebook(id: Id): Promise<void> {
 /** Creates an empty notebook and opens it. Returns its id, or null if that failed. */
 export async function createNotebook(): Promise<Id | null> {
   try {
-    return await addNotebook(NEW_NOTEBOOK_NAME, emptyNotebook());
+    return await addNotebook(NEW_NOTEBOOK_NAME, newNotebook());
   } catch (err) {
     notify('Could not create a notebook', err);
     return null;
@@ -56,7 +55,7 @@ export async function deleteNotebook(id: Id): Promise<void> {
     if (id === activeId) {
       const other = notebooks.find((n) => n.id !== id);
       if (other) await openNotebook(other.id);
-      else await addNotebook(NEW_NOTEBOOK_NAME, emptyNotebook());
+      else await addNotebook(NEW_NOTEBOOK_NAME, newNotebook());
     }
     useLibrary.getState().remove(id);
     await deleteNotebookFile(id);
@@ -71,8 +70,7 @@ export async function exportNotebook(id: Id): Promise<void> {
   try {
     const info = useLibrary.getState().notebooks.find((n) => n.id === id);
     if (!info) return;
-    const { folders, pages } = useNotebook.getState();
-    const notebook = id === useLibrary.getState().activeId ? { folders, pages } : await readNotebook(id);
+    const notebook = id === useLibrary.getState().activeId ? openNotebookContents() : await readNotebook(id);
     await saveFileAs(exportFileName(info.name), exportText(info.name, notebook));
   } catch (err) {
     notify('Could not export the notebook', err);

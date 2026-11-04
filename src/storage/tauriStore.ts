@@ -30,9 +30,9 @@ export const tauriStore: DocumentStore = {
     await writeTextFile(tmp, text, opts);
     await rename(tmp, path(name), { oldPathBaseDir: BaseDirectory.AppData, newPathBaseDir: BaseDirectory.AppData });
   },
-  async backup(name, text) {
+  async backup(name, text, label) {
     await ensureDir();
-    await writeTextFile(`${DIR}/${name}.corrupt-${Date.now()}.json`, text, opts);
+    await writeTextFile(`${DIR}/${name}.${label}-${Date.now()}.json`, text, opts);
   },
   async remove(name) {
     if (await exists(path(name), opts)) await remove(path(name), opts);

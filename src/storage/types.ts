@@ -9,8 +9,8 @@ export interface DocumentStore {
   read(name: string): Promise<string | null>;
   /** Saves the document's text, replacing any previous version. */
   write(name: string, text: string): Promise<void>;
-  /** Keep a copy of unreadable data before it would be overwritten. */
-  backup(name: string, text: string): Promise<void>;
+  /** Keep a copy of the document's text (unreadable, or about to be upgraded) before it would be overwritten; `label` says why. */
+  backup(name: string, text: string, label: string): Promise<void>;
   /** Deletes the document (nothing happens if it doesn't exist). */
   remove(name: string): Promise<void>;
 }
